@@ -20,9 +20,6 @@ class Ball(pygame.sprite.Sprite):
             self.vy = -self.vy
         if pygame.sprite.spritecollideany(self, vertical_borders):
             self.vx = -self.vx
-        if pygame.sprite.spritecollideany(self, balls):
-            self.vx, self.vy = pygame.sprite.spritecollideany(self, balls).vx, \
-                               pygame.sprite.spritecollideany(self, balls).vy
 
 
 class Border(pygame.sprite.Sprite):
@@ -51,8 +48,8 @@ if __name__ == '__main__':
     Border(5, height - 5, width - 5, height - 5)
     Border(5, 5, 5, height - 5)
     Border(width - 5, 5, width - 5, height - 5)
-    for i in range(10):
-        Ball(20, random.randint(30, width - 30), random.randint(30, height - 30))
+    for i in range(5):
+        Ball(20, random.randint(50, width - 50), random.randint(50, height - 50))
     clock = pygame.time.Clock()
     running = True
     while running:
