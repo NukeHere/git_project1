@@ -29,26 +29,29 @@ class Camera:
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
-class BaseTank(pygame.sprite.Sprite):
-    #image = load_image('tank_body.png')
 
+class BaseTank(pygame.sprite.Sprite):
+    # image = load_image('tank_body.png')
+    # image_orig = load_image('tank_body.png')
     # base scale 804x368
 
     def __init__(self, x, y, angle, nm):
         super().__init__(all_sprites)
-        BaseTank.image = load_image(nm)
-        BaseTank.image = pygame.transform.scale(BaseTank.image, (201, 92))
-        self.image = BaseTank.image
+        self.image = load_image(nm)
+        self.image_orig = pygame.transform.scale(self.image, (67, 31))
+        self.image = pygame.transform.scale(self.image, (67, 31))
         self.rect = self.image.get_rect()
         self.rect.move(x, y)
         self.rect.x, self.rect.y = x, y
         self.ang = angle * 0.017
-        self.mxspeed = 2
+        self.crspeed = 0
 
     def update(self):
-        if moving and self == player:
-            player.rect = player.rect.move(-player.mxspeed * math.cos(player.ang),
-                                           player.mxspeed * math.sin(player.ang))
+        if self == player:
+            player.rect = player.rect.move(player.crspeed * math.cos(player.ang),
+                                           player.crspeed * math.sin(player.ang))
+        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+        self.rect = self.image.get_rect(center=self.rect.center)
 
 
 if __name__ == '__main__':
@@ -57,23 +60,56 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
-    tank1 = BaseTank(100, 100, 90, 'tank_body.png')
+    tank1 = BaseTank(100, 100, 0, 'tank_body.png')
     tank2 = BaseTank(500, 500, 0, 'nlo.jpg')
     camera = Camera()
     running = True
     player = tank1
-    moving = False
+    m1 = False
+    m2 = False
+    maxspeed = 8
+    k2 = 1
+    k3 = 1
     while running:
-        print(tank2.rect.x, tank2.rect.y, camera.dx, camera.dy)
+        k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
-                    moving = True
+                    m1 = True
+                    k2 = 1
+                if event.key == pygame.K_s:
+                    m1 = True
+                    k2 = -0.5
+                if event.key == pygame.K_a:
+                    m2 = True
+                    k3 = -1
+                if event.key == pygame.K_d:
+                    m2 = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_w:
-                    moving = False
+                    m1 = False
+                if event.key == pygame.K_s:
+                    m1 = False
+                    k2 = 1
+                if event.key == pygame.K_a:
+                    m2 = False
+                    k3 = 1
+                if event.key == pygame.K_d:
+                    m2 = False
+        if m1 and abs(player.crspeed) < maxspeed:
+            player.crspeed += 0.002 * k * k2
+        else:
+            if abs(player.crspeed) < 1:
+                player.crspeed = 0
+            elif player.crspeed > 0:
+                player.crspeed -= 0.25
+            elif player.crspeed < 0:
+                player.crspeed += 0.25
+        if m2:
+            player.ang += 1 * k3 * 0.017
+        print(player.crspeed, k, player.ang / 0.017)
         screen.fill((0, 0, 0))
         camera.update(player)
         for sprite in all_sprites:
