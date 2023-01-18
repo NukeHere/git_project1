@@ -30,6 +30,29 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
+class TankGun(pygame.sprite.Sprite):
+    def __init__(self, nm, team, body):
+        super().__init__(all_sprites)
+        if team == 'A':
+            self.add(a_team)
+        else:
+            self.add(b_team)
+        self.team = team
+        self.name = 'gun'
+        self.image = load_image(nm)
+        self.image_orig = pygame.transform.scale(self.image, (67, 31))
+        self.image = pygame.transform.scale(self.image, (67, 31))
+        self.rect = self.image.get_rect()
+        self.rect.move(body.rect.x, body.rect.y)
+        self.ang = body.ang + 1
+        self.body = body
+
+    def update(self):
+        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.rect.x, self.rect.y = self.body.rect.x, self.body.rect.y
+
+
 class BaseTank(pygame.sprite.Sprite):
     # image = load_image('tank_body.png')
     # image_orig = load_image('tank_body.png')
@@ -53,9 +76,8 @@ class BaseTank(pygame.sprite.Sprite):
         self.crspeed = 0
 
     def update(self):
-        if self == player:
-            player.rect = player.rect.move(player.crspeed * math.cos(player.ang),
-                                           player.crspeed * math.sin(player.ang))
+        self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
+                                           self.crspeed * math.sin(self.ang))
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
         if pygame.sprite.spritecollideany(self, b_team) \
@@ -67,7 +89,7 @@ class BaseTank(pygame.sprite.Sprite):
 
 
 class MainGame:
-    def __init__(self, w, h):
+    def __init__(self, w, h, map=None):
         global width, height, all_sprites, player, barriers, a_team, b_team
         pygame.init()
         size = width, height = w, h
@@ -79,6 +101,7 @@ class MainGame:
         clock = pygame.time.Clock()
         tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A')
         tank2 = BaseTank(300, 300, 0, 'nlo.jpg', 'B')
+        gun1 = TankGun('gun1.jpg', "A", tank1)
         camera = Camera()
         running = True
         player = tank1
@@ -140,4 +163,4 @@ class MainGame:
 
 
 if __name__ == '__main__':
-    a = MainGame(800, 600)
+    MainGame(800, 600)
