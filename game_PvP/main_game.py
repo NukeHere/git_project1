@@ -56,12 +56,12 @@ class BaseTank(pygame.sprite.Sprite):
 
 if __name__ == '__main__':
     pygame.init()
-    size = width, height = 1000, 1000
+    size = width, height = 800, 600
     screen = pygame.display.set_mode(size)
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
     tank1 = BaseTank(100, 100, 0, 'tank_body.png')
-    tank2 = BaseTank(500, 500, 0, 'nlo.jpg')
+    tank2 = BaseTank(300, 300, 0, 'nlo.jpg')
     camera = Camera()
     running = True
     player = tank1
@@ -108,8 +108,9 @@ if __name__ == '__main__':
             elif player.crspeed < 0:
                 player.crspeed += 0.25
         if m2:
-            player.ang += 1 * k3 * 0.017
-        print(player.crspeed, k, player.ang / 0.017)
+            player.ang += (1 * k3 * 0.017)
+            player.ang = (player.ang / 0.017) % 360 * 0.017
+        print(player.crspeed, k, player.ang / 0.017, 1 * k3 * 0.017)
         screen.fill((0, 0, 0))
         camera.update(player)
         for sprite in all_sprites:
