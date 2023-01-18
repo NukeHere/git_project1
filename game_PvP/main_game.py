@@ -35,8 +35,14 @@ class BaseTank(pygame.sprite.Sprite):
     # image_orig = load_image('tank_body.png')
     # base scale 804x368
 
-    def __init__(self, x, y, angle, nm):
+    def __init__(self, x, y, angle, nm, team):
         super().__init__(all_sprites)
+        if team == 'A':
+            self.add(a_team)
+        else:
+            self.add(b_team)
+        self.team = team
+        self.name = 'tonk'
         self.image = load_image(nm)
         self.image_orig = pygame.transform.scale(self.image, (67, 31))
         self.image = pygame.transform.scale(self.image, (67, 31))
@@ -52,18 +58,27 @@ class BaseTank(pygame.sprite.Sprite):
                                            player.crspeed * math.sin(player.ang))
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
+        if pygame.sprite.spritecollideany(self, b_team) \
+                and self.team != pygame.sprite.spritecollideany(self, b_team).team \
+                and pygame.sprite.spritecollideany(self, b_team).name == 'tonk':
+            self.rect = self.rect.move(-self.crspeed * math.cos(self.ang),
+                                       -self.crspeed * math.sin(self.ang))
+            self.crspeed = 0
 
 
 class MainGame:
     def __init__(self, w, h):
-        global width, height, all_sprites, player
+        global width, height, all_sprites, player, barriers, a_team, b_team
         pygame.init()
         size = width, height = w, h
         screen = pygame.display.set_mode(size)
+        a_team = pygame.sprite.Group()
+        b_team = pygame.sprite.Group()
+        barriers = pygame.sprite.Group()
         all_sprites = pygame.sprite.Group()
         clock = pygame.time.Clock()
-        tank1 = BaseTank(100, 100, 0, 'tank_body.png')
-        tank2 = BaseTank(300, 300, 0, 'nlo.jpg')
+        tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A')
+        tank2 = BaseTank(300, 300, 0, 'nlo.jpg', 'B')
         camera = Camera()
         running = True
         player = tank1
@@ -112,8 +127,8 @@ class MainGame:
             if m2:
                 player.ang += (1 * k3 * 0.017)
                 player.ang = (player.ang / 0.017) % 360 * 0.017
-            # print(player.crspeed, k, player.ang / 0.017, player.crspeed * math.cos(player.ang),
-            #                                            player.crspeed * math.sin(player.ang)) debug out
+            # print(player.crspeed, k, player.ang / 0.017)
+            # debug out
             screen.fill((0, 0, 0))
             camera.update(player)
             for sprite in all_sprites:
