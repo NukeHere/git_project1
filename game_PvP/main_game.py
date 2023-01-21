@@ -30,8 +30,29 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
+class Aim(pygame.sprite.Sprite):
+    def __init__(self, team, is_ai=False):
+        super().__init__(all_sprites)
+        if team == 'A':
+            self.add(a_team)
+        else:
+            self.add(b_team)
+        self.add(aims)
+        self.team = team
+        self.name = 'Aim'
+        self.rect = pygame.Rect(1, 1, 1, 1)
+        self.aimode = is_ai
+        self.image = load_image('null.png')
+
+        def update(self):
+            pass
+
+        def mousemotion(self, pos):
+            self.rect = pos
+
+
 class TankGun(pygame.sprite.Sprite):
-    def __init__(self, nm, team, body):
+    def __init__(self, nm, team, body, aim):
         super().__init__(all_sprites)
         if team == 'A':
             self.add(a_team)
@@ -46,11 +67,20 @@ class TankGun(pygame.sprite.Sprite):
         self.rect.move(body.rect.x, body.rect.y)
         self.ang = body.ang + 1
         self.body = body
+        self.aim = aim
 
     def update(self):
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
+        kk = math.atan(self.aim.rect.x - self.rect.x / self.aim.rect.y - self.rect.y)
+        if self.ang != kk:
+            if abs(self.ang - math.atan(self.aim.rect.x - self.rect.x / self.aim.rect.y - self.rect.y)) <= 0.017:
+                self.ang = kk
+            elif self.ang < kk:
+                self.ang += 0.017 * 1
+            else:
+                self.ang -= 0.017 * 1
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -78,7 +108,7 @@ class BaseTank(pygame.sprite.Sprite):
 
     def update(self):
         self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
-                                           self.crspeed * math.sin(self.ang))
+                                   self.crspeed * math.sin(self.ang))
         self.mask = pygame.mask.from_surface(self.image)
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
@@ -93,10 +123,11 @@ class BaseTank(pygame.sprite.Sprite):
 
 class MainGame:
     def __init__(self, w, h, map=None):
-        global width, height, all_sprites, player, barriers, a_team, b_team
+        global width, height, all_sprites, player, barriers, a_team, b_team, aims
         pygame.init()
         size = width, height = w, h
         screen = pygame.display.set_mode(size)
+        aims = pygame.sprite.Group()
         a_team = pygame.sprite.Group()
         b_team = pygame.sprite.Group()
         barriers = pygame.sprite.Group()
@@ -104,8 +135,10 @@ class MainGame:
         clock = pygame.time.Clock()
         tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A')
         tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B')
-        gun1 = TankGun('gun1.png', "A", tank1)
-        gun2 = TankGun('gun1.png', "B", tank2)
+        ai1 = Aim("A")
+        ai2 = Aim("B", is_ai=True)
+        gun1 = TankGun('gun1.png', "A", tank1, ai1)
+        gun2 = TankGun('gun1.png', "B", tank2, ai2)
         camera = Camera()
         running = True
         player = tank1
@@ -142,6 +175,9 @@ class MainGame:
                         k3 = 1
                     if event.key == pygame.K_d:
                         m2 = False
+                if event.type == pygame.MOUSEMOTION:
+                    for spr in aims:
+                        spr.mousemotion(event.pos)
             if m1 and abs(player.crspeed) < maxspeed:
                 player.crspeed += 0.002 * k * k2
             else:
