@@ -40,8 +40,8 @@ class TankGun(pygame.sprite.Sprite):
         self.team = team
         self.name = 'gun'
         self.image = load_image(nm)
-        self.image_orig = pygame.transform.scale(self.image, (67, 31))
-        self.image = pygame.transform.scale(self.image, (67, 31))
+        self.image_orig = pygame.transform.scale(self.image, (54, 25))
+        self.image = pygame.transform.scale(self.image, (54, 25))
         self.rect = self.image.get_rect()
         self.rect.move(body.rect.x, body.rect.y)
         self.ang = body.ang + 1
@@ -50,7 +50,7 @@ class TankGun(pygame.sprite.Sprite):
     def update(self):
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
-        self.rect.x, self.rect.y = self.body.rect.x, self.body.rect.y
+        self.rect.center = self.body.rect.center
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -69,6 +69,7 @@ class BaseTank(pygame.sprite.Sprite):
         self.image = load_image(nm)
         self.image_orig = pygame.transform.scale(self.image, (67, 31))
         self.image = pygame.transform.scale(self.image, (67, 31))
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.move(x, y)
         self.rect.x, self.rect.y = x, y
@@ -78,14 +79,16 @@ class BaseTank(pygame.sprite.Sprite):
     def update(self):
         self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
                                            self.crspeed * math.sin(self.ang))
+        self.mask = pygame.mask.from_surface(self.image)
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
-        if pygame.sprite.spritecollideany(self, b_team) \
-                and self.team != pygame.sprite.spritecollideany(self, b_team).team \
-                and pygame.sprite.spritecollideany(self, b_team).name == 'tonk':
-            self.rect = self.rect.move(-self.crspeed * math.cos(self.ang),
-                                       -self.crspeed * math.sin(self.ang))
-            self.crspeed = 0
+        if self.team == "A":
+            for sprite in b_team:
+                if pygame.sprite.spritecollideany(self, b_team) and \
+                        pygame.sprite.spritecollideany(self, b_team).name == 'tonk' and \
+                        pygame.sprite.collide_mask(self, sprite):
+                    self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
+                    self.crspeed = 0
 
 
 class MainGame:
@@ -100,14 +103,15 @@ class MainGame:
         all_sprites = pygame.sprite.Group()
         clock = pygame.time.Clock()
         tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A')
-        tank2 = BaseTank(300, 300, 0, 'nlo.jpg', 'B')
-        gun1 = TankGun('gun1.jpg', "A", tank1)
+        tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B')
+        gun1 = TankGun('gun1.png', "A", tank1)
+        gun2 = TankGun('gun1.png', "B", tank2)
         camera = Camera()
         running = True
         player = tank1
         m1 = False
         m2 = False
-        maxspeed = 8
+        maxspeed = 3
         k2 = 1
         k3 = 1
         while running:
@@ -144,11 +148,11 @@ class MainGame:
                 if abs(player.crspeed) < 1:
                     player.crspeed = 0
                 elif player.crspeed > 0:
-                    player.crspeed -= 0.01
+                    player.crspeed -= 0.018
                 elif player.crspeed < 0:
-                    player.crspeed += 0.01
+                    player.crspeed += 0.018
             if m2:
-                player.ang += (1 * k3 * 0.017)
+                player.ang += (0.6 * k3 * 0.017)
                 player.ang = (player.ang / 0.017) % 360 * 0.017
             # print(player.crspeed, k, player.ang / 0.017)
             # debug out
