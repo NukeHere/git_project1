@@ -31,6 +31,7 @@ class Camera:
 
 
 class Aim(pygame.sprite.Sprite):
+
     def __init__(self, team, is_ai=False):
         super().__init__(all_sprites)
         if team == 'A':
@@ -44,11 +45,12 @@ class Aim(pygame.sprite.Sprite):
         self.aimode = is_ai
         self.image = load_image('null.png')
 
-        def update(self):
-            pass
+    def update(self):
+        pass
 
-        def mousemotion(self, pos):
-            self.rect = pos
+    def mousemoved(self, pos):
+        if not self.aimode:
+            self.rect.x, self.rect.y = pos
 
 
 class TankGun(pygame.sprite.Sprite):
@@ -73,9 +75,10 @@ class TankGun(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
-        kk = math.atan(self.aim.rect.x - self.rect.x / self.aim.rect.y - self.rect.y)
+        kk = math.atan((self.aim.rect.x - self.rect.x + 0.0001) / (self.aim.rect.y - self.rect.y + 0.0001))
         if self.ang != kk:
-            if abs(self.ang - math.atan(self.aim.rect.x - self.rect.x / self.aim.rect.y - self.rect.y)) <= 0.017:
+            print(self.ang / 0.017, kk / 0.017)
+            if abs(self.ang - kk) <= 0.017:
                 self.ang = kk
             elif self.ang < kk:
                 self.ang += 0.017 * 1
@@ -147,6 +150,7 @@ class MainGame:
         maxspeed = 3
         k2 = 1
         k3 = 1
+        mousepos = (0, 0)
         while running:
             k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
             for event in pygame.event.get():
@@ -176,8 +180,7 @@ class MainGame:
                     if event.key == pygame.K_d:
                         m2 = False
                 if event.type == pygame.MOUSEMOTION:
-                    for spr in aims:
-                        spr.mousemotion(event.pos)
+                    mousepos = event.pos
             if m1 and abs(player.crspeed) < maxspeed:
                 player.crspeed += 0.002 * k * k2
             else:
@@ -196,6 +199,8 @@ class MainGame:
             camera.update(player)
             for sprite in all_sprites:
                 camera.apply(sprite)
+            for spr in aims:
+                spr.mousemoved(mousepos)
             all_sprites.update()
             all_sprites.draw(screen)
             pygame.display.flip()
