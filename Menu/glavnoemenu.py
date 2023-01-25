@@ -1,28 +1,61 @@
 import pygame
 
+
 class GlavnoeMenu():
-    def __init__(self, screen):
+    def __init__(self, screen, screen_resolution):
         self.screen = screen
+        self.screen_resolution = screen_resolution
 
     def risovanie(self, pic):
         pygame.font.init()
         self.screen.fill((0, 0, 0))
         self.screen.blit(pic, (0, 0))
-        pygame.draw.rect(self.screen, ('#808080'), (300, 225, 200, 65))# кнопка новая игра
-        pygame.draw.rect(self.screen, ('#808080'), (300, 310, 200, 65))# кнопка настройки
-        pygame.draw.rect(self.screen, ('#808080'), (300, 395, 200, 65))# кнопка управление
-        pygame.draw.rect(self.screen, ('#808080'), (300, 480, 200, 65))# кнопка выход
-        q = pygame.font.SysFont('arial', 25)
+        pygame.draw.rect(self.screen, ('#808080'), (300 * self.screen_resolution,
+                                                    225 * self.screen_resolution, 200 * self.screen_resolution,
+                                                    65 * self.screen_resolution))# кнопка новая игра
+        pygame.draw.rect(self.screen, ('#808080'), (300 * self.screen_resolution,
+                                                    310 * self.screen_resolution, 200 * self.screen_resolution,
+                                                    65 * self.screen_resolution))# кнопка настройки
+        pygame.draw.rect(self.screen, ('#808080'), (300 * self.screen_resolution,
+                                                    395 * self.screen_resolution, 200 * self.screen_resolution,
+                                                    65 * self.screen_resolution))# кнопка управление
+        pygame.draw.rect(self.screen, ('#808080'), (300 * self.screen_resolution,
+                                                    480 * self.screen_resolution, 200 * self.screen_resolution,
+                                                    65 * self.screen_resolution))# кнопка выход
+        q = pygame.font.SysFont('arial', int(25 * self.screen_resolution))
         txt = q.render('Новая игра', True, (255, 255, 255))
-        self.screen.blit(txt, (345, 245))
+        self.screen.blit(txt, (345 * self.screen_resolution,
+                               245 * self.screen_resolution))
         txt = q.render('Настройки', True, (255, 255, 255))
-        self.screen.blit(txt, (345, 330))
+        self.screen.blit(txt, (345 * self.screen_resolution,
+                               330 * self.screen_resolution))
         txt = q.render('Управление', True, (255, 255, 255))
-        self.screen.blit(txt, (345, 415))
+        self.screen.blit(txt, (345 * self.screen_resolution,
+                               415 * self.screen_resolution))
         txt = q.render('Выход', True, (255, 255, 255))
-        self.screen.blit(txt, (365, 500))
-        return list([[300, 225, 300 + 200, 225 + 65], [300, 310, 300 + 200, 310 + 65],
-                     [300, 395, 300 + 200, 395 + 65], [300, 480, 500, 545]])
+        self.screen.blit(txt, (365 * self.screen_resolution,
+                               500 * self.screen_resolution))
+        return list([[300 * self.screen_resolution, 225 * self.screen_resolution,
+                      300 * self.screen_resolution + 200 * self.screen_resolution,
+                      225 * self.screen_resolution + 65 * self.screen_resolution],
+                     [300 * self.screen_resolution, 310 * self.screen_resolution,
+                      300 * self.screen_resolution + 200 * self.screen_resolution,
+                      310 * self.screen_resolution + 65 * self.screen_resolution],
+                     [300 * self.screen_resolution, 395 * self.screen_resolution,
+                      300 * self.screen_resolution + 200 * self.screen_resolution,
+                      395 * self.screen_resolution + 65 * self.screen_resolution],
+                     [300 * self.screen_resolution, 480 * self.screen_resolution,
+                      300 * self.screen_resolution + 200 * self.screen_resolution,
+                      480 * self.screen_resolution + 65 * self.screen_resolution]])
 
     def type(self):
         return 'GlavnoeMenu'
+
+    def new_resolution(self, q):
+        global SCREEN_RESOLATION_LIST
+        if (q == 0):
+            SCREEN_RESOLATION_LIST[-1] = 0
+            return 1
+        elif (q == 1):
+            SCREEN_RESOLATION_LIST[-1] = 1
+            return 1.2
