@@ -76,6 +76,13 @@ class TankGun(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
         kk = math.atan((self.aim.rect.x - self.rect.x + 0.0001) / (self.aim.rect.y - self.rect.y + 0.0001))
+        if self.aim.rect.y < self.rect.y:
+            if self.aim.rect.x > self.rect.x:
+                kk = -(90 * 0.017 + kk)
+            else:
+                kk = -90 * 0.017 - kk
+        else:
+            kk = 90 * 0.017 - kk
         if self.ang != kk:
             print(self.ang / 0.017, kk / 0.017)
             if abs(self.ang - kk) <= 0.017:
