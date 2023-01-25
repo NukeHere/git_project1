@@ -68,6 +68,13 @@ if __name__ == '__main__':
                     elif (pos_knopok[1][0] <= event.pos[0] <= pos_knopok[1][2]
                           and pos_knopok[1][1] <= event.pos[1] <= pos_knopok[1][3]):
                         q = vibor_kart(screen, SCREEN_RESOLATION)
+                elif (q.type() == 'Vibor Kart'):
+                    if (pos_knopok[0][0] <= event.pos[0] <= pos_knopok[0][2]
+                            and pos_knopok[0][1] <= event.pos[1] <= pos_knopok[0][3]):
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, SCREEN_RESOLATION)
+                    elif (pos_knopok[1][0] <= event.pos[0] <= pos_knopok[1][2]
+                          and pos_knopok[1][1] <= event.pos[1] <= pos_knopok[1][3]):
+                        pass
                 elif (q.type() == 'Nastroiki'):
                     if (not f):
                         if (pos_knopok[5][0] <= event.pos[0] <= pos_knopok[5][2]
