@@ -30,6 +30,6 @@ class vibor_kart(GlavnoeMenu):
                       500 * self.screen_resolution, 375 * self.screen_resolution],
                      [300 * self.screen_resolution, 395 * self.screen_resolution,
                       500 * self.screen_resolution, 460 * self.screen_resolution]])
-
+    
     def type(self):
         return 'Vibor Kart'
