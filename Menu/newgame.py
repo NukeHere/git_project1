@@ -13,7 +13,7 @@ class Vibor(GlavnoeMenu):
         txt = q.render('PvE 1x1', True, (255, 255, 255))
         self.screen.blit(txt, (365, 245))
         txt = q.render('PvE 2x2', True, (255, 255, 255)) # с PvP плохо усё
-        self.screen.blit(txt, (380, 330))
+        self.screen.blit(txt, (365, 330))
         txt = q.render('Назад', True, (255, 255, 255))
         self.screen.blit(txt, (50, 545))
         return list([[300, 225, 300 + 200, 225 + 65], [300, 310, 300 + 200, 310 + 65]])

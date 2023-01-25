@@ -8,10 +8,10 @@ class GlavnoeMenu():
         pygame.font.init()
         self.screen.fill((0, 0, 0))
         self.screen.blit(pic, (0, 0))
-        pygame.draw.rect(self.screen, ('#808080'), (300, 225, 200, 65))
-        pygame.draw.rect(self.screen, ('#808080'), (300, 310, 200, 65))
-        pygame.draw.rect(self.screen, ('#808080'), (300, 395, 200, 65))
-        pygame.draw.rect(self.screen, ('#808080'), (300, 480, 200, 65))
+        pygame.draw.rect(self.screen, ('#808080'), (300, 225, 200, 65))# кнопка новая игра
+        pygame.draw.rect(self.screen, ('#808080'), (300, 310, 200, 65))# кнопка настройки
+        pygame.draw.rect(self.screen, ('#808080'), (300, 395, 200, 65))# кнопка управление
+        pygame.draw.rect(self.screen, ('#808080'), (300, 480, 200, 65))# кнопка выход
         q = pygame.font.SysFont('arial', 25)
         txt = q.render('Новая игра', True, (255, 255, 255))
         self.screen.blit(txt, (345, 245))
