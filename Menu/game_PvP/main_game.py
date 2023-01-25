@@ -111,7 +111,7 @@ class TankGun(pygame.sprite.Sprite):
                 self.ang += 0.017 * 1
             else:
                 self.ang -= 0.017 * 1
-            print(self.ang / 0.017, kk / 0.017, e1, e2)
+            # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -147,6 +147,13 @@ class BaseTank(pygame.sprite.Sprite):
             for sprite in b_team:
                 if pygame.sprite.spritecollideany(self, b_team) and \
                         pygame.sprite.spritecollideany(self, b_team).name == 'tonk' and \
+                        pygame.sprite.collide_mask(self, sprite):
+                    self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
+                    self.crspeed = 0
+        if self.team == "B":
+            for sprite in a_team:
+                if pygame.sprite.spritecollideany(self, a_team) and \
+                        pygame.sprite.spritecollideany(self, a_team).name == 'tonk' and \
                         pygame.sprite.collide_mask(self, sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
