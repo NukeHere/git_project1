@@ -75,22 +75,43 @@ class TankGun(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
-        kk = math.atan((self.aim.rect.x - self.rect.x + 0.0001) / (self.aim.rect.y - self.rect.y + 0.0001))
-        if self.aim.rect.y < self.rect.y:
-            if self.aim.rect.x > self.rect.x:
+        kk = math.atan((self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
+        if self.aim.rect.y < self.rect.center[1]:
+            if self.aim.rect.x > self.rect.center[0]:
                 kk = -(90 * 0.017 + kk)
             else:
                 kk = -90 * 0.017 - kk
         else:
             kk = 90 * 0.017 - kk
+        if self.ang > 180 * 0.017:
+            self.ang = -180 * 0.017
+        elif self.ang < -180 * 0.017:
+            self.ang = 180 * 0.017
         if self.ang != kk:
-            print(self.ang / 0.017, kk / 0.017)
+            e1 = 0
+            e2 = 0
+            if self.ang > 0:
+                if kk > 0:
+                    e1 = -self.ang + kk if kk > self.ang else 3.06 - self.ang + kk + 3.06
+                    e2 = self.ang - kk if self.ang > kk else 3.06 - self.ang + kk + 3.06
+                else:
+                    e1 = 3.06 - self.ang - kk
+                    e2 = self.ang - kk
+            else:
+                if kk > 0:
+                    e1 += -self.ang + kk
+                    e2 += 3.06 + self.ang + 3.06 - self.ang
+                else:
+                    e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
+                    e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
             if abs(self.ang - kk) <= 0.017:
                 self.ang = kk
-            elif self.ang < kk:
+            elif e1 <= e2:
+                # self.ang < kk or
                 self.ang += 0.017 * 1
             else:
                 self.ang -= 0.017 * 1
+            print(self.ang / 0.017, kk / 0.017, e1, e2)
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -148,7 +169,7 @@ class MainGame:
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True)
         gun1 = TankGun('gun1.png', "A", tank1, ai1)
-        gun2 = TankGun('gun1.png', "B", tank2, ai2)
+        #gun2 = TankGun('gun1.png', "B", tank2, ai2)
         camera = Camera()
         running = True
         player = tank1
