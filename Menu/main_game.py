@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 import math
+#from main import VOLUEME_M, VOLUEME_Z
 
 
 def load_image(name, colorkey=None):
@@ -75,8 +76,8 @@ class Ammo(pygame.sprite.Sprite):
         if self.team == "B":
             for sprite in a_team:
                 if pygame.sprite.spritecollideany(self, a_team) and pygame.sprite.collide_mask(self, sprite):
-                    a = pygame.sprite.spritecollideany(self, a_team).name
-                    if a not in ['bul', 'Aim']:
+                    a = pygame.sprite.spritecollideany(self, a_team)
+                    if a.name not in ['bul', 'Aim']:
                         sprite.xp -= max(self.bs_dmg // 2 - sprite.armour, 0)
                     if a.name == 'tonk':
                         sprite.xp -= max(self.bs_dmg - sprite.armour, 0)
@@ -174,7 +175,7 @@ class TankGun(pygame.sprite.Sprite):
             # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
     def fire(self):
-        Ammo('bul.png', "A", self.ang, self.rect.center, sp=10)
+        Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10)
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -227,8 +228,14 @@ class BaseTank(pygame.sprite.Sprite):
 class MainGame:
     def __init__(self, w, h, maap=None):
         global width, height, all_sprites, player, barriers, a_team, b_team, aims
+        VOLUEME_M, VOLUEME_Z = 1, 1
         pygame.init()
         size = width, height = w, h
+        sound_battle = pygame.mixer.Sound(os.path.join('data',
+                                                       'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva - Mountain Pass (Battle).mp3'))
+        sound_fire = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
+        sound_fire.set_volume(VOLUEME_Z)
+        sound_battle.set_volume(VOLUEME_M)
         screen = pygame.display.set_mode(size)
         aims = pygame.sprite.Group()
         a_team = pygame.sprite.Group()
@@ -252,6 +259,7 @@ class MainGame:
         k3 = 1
         mousepos = (0, 0)
         pic = load_image("болото.png")
+        sound_battle.play(-1)
         while running:
             print(tank2.xp)
             k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
@@ -285,6 +293,7 @@ class MainGame:
                     mousepos = event.pos
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     gun1.fire()
+                    sound_fire.play(0)
             if m1 and abs(player.crspeed) < maxspeed:
                 player.crspeed += 0.002 * k * k2
             else:
