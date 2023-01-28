@@ -2,7 +2,9 @@ import pygame
 import os
 import sys
 import math
-#from main import VOLUEME_M, VOLUEME_Z
+
+
+# from main import VOLUEME_M, VOLUEME_Z
 
 
 def load_image(name, colorkey=None):
@@ -29,6 +31,33 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+
+
+class Track(pygame.sprite.Sprite):
+    def __init__(self, nm, team, body, armour):
+        super().__init__(all_sprites)
+        if team == 'A':
+            self.add(a_team)
+        else:
+            self.add(b_team)
+        self.team = team
+        self.name = 'gun'
+        self.image = load_image(nm)
+        self.image_orig = pygame.transform.scale(self.image, (67, 17))
+        self.image = pygame.transform.scale(self.image, (67, 17))
+        self.rect = self.image.get_rect()
+        self.rect.move(body.rect.x, body.rect.y)
+        self.ang = body.ang + 1
+        self.body = body
+        self.armour = armour
+        self.xp = body.xp
+
+    def update(self):
+        self.ang = self.body.ang
+        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.rect.center = self.body.rect.center
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class Ammo(pygame.sprite.Sprite):
@@ -104,7 +133,7 @@ class Aim(pygame.sprite.Sprite):
 
     def update(self):
         if self.aimode:
-            self.rect.x, self.rect.y = player.rect.x, player.rect.y
+            self.rect.x, self.rect.y = player.center
 
     def mousemoved(self, pos):
         if not self.aimode:
@@ -245,6 +274,7 @@ class MainGame:
         clock = pygame.time.Clock()
         tank1 = BaseTank(0, 0, 0, 'tank_body.png', 'A', 16, 100)
         tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B', 16, 100)
+        track11 = Track('track1.png', "A", tank1, 8)
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True)
         gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
