@@ -8,7 +8,6 @@ from viborK import vibor_kart
 from ypravlenie import Ypravlenie
 from main_game import MainGame
 
-
 SCREEN_RESOLATION = 1
 VOLUEME_M = 1
 VOLUEME_Z = 1
@@ -41,7 +40,7 @@ if __name__ == '__main__':
     f = True
     sound_main.play(-1)
     while run:
-        if(f):
+        if (f):
             pos_knopok = q.risovanie(pic)
         else:
             pos_knopok = q.risovanie(pic, True)
@@ -122,7 +121,7 @@ if __name__ == '__main__':
                 elif (q.type() == 'Nastroiki'):
                     if (not f):
                         if (pos_knopok[5][0] <= event.pos[0] <= pos_knopok[5][2]
-                            and pos_knopok[5][1] <= event.pos[1] <= pos_knopok[5][3]):
+                                and pos_knopok[5][1] <= event.pos[1] <= pos_knopok[5][3]):
                             sound1.set_volume(VOLUEME_Z)
                             sound1.play(0)
                             SCREEN_RESOLATION = q.new_resolution(0)
@@ -133,7 +132,7 @@ if __name__ == '__main__':
                             pos_knopok = q.risovanie(pic)
                             pygame.display.update()
                         elif (pos_knopok[6][0] <= event.pos[0] <= pos_knopok[6][2]
-                            and pos_knopok[6][1] <= event.pos[1] <= pos_knopok[6][3]):
+                              and pos_knopok[6][1] <= event.pos[1] <= pos_knopok[6][3]):
                             sound1.set_volume(VOLUEME_Z)
                             sound1.play(0)
                             SCREEN_RESOLATION = q.new_resolution(1)
@@ -144,7 +143,7 @@ if __name__ == '__main__':
                             pos_knopok = q.risovanie(pic)
                             pygame.display.update()
                         elif (pos_knopok[7][0] <= event.pos[0] <= pos_knopok[7][2]
-                            and pos_knopok[7][1] <= event.pos[1] <= pos_knopok[7][3]):
+                              and pos_knopok[7][1] <= event.pos[1] <= pos_knopok[7][3]):
                             sound1.set_volume(VOLUEME_Z)
                             sound1.play(0)
                             SCREEN_RESOLATION = q.new_resolution(2)
@@ -162,14 +161,14 @@ if __name__ == '__main__':
                         sound_main.set_volume(VOLUEME_M)
                         f = True
                     elif (pos_knopok[1][0] <= event.pos[0] <= pos_knopok[1][2]
-                            and pos_knopok[1][1] <= event.pos[1] <= pos_knopok[1][3]):
+                          and pos_knopok[1][1] <= event.pos[1] <= pos_knopok[1][3]):
                         sound1.set_volume(VOLUEME_Z)
                         sound1.play(0)
                         VOLUEME_M = q.plusORminusZvuki(0, 0)
                         sound_main.set_volume(VOLUEME_M)
                         f = True
                     elif (pos_knopok[2][0] <= event.pos[0] <= pos_knopok[2][2]
-                            and pos_knopok[2][1] <= event.pos[1] <= pos_knopok[2][3]):
+                          and pos_knopok[2][1] <= event.pos[1] <= pos_knopok[2][3]):
                         sound1.set_volume(VOLUEME_Z)
                         sound1.play(0)
                         VOLUEME_Z = q.plusORminusZvuki(0, 1)
