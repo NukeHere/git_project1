@@ -74,10 +74,14 @@ class Nastroiki(GlavnoeMenu):
                                                         150 * self.screen_resolution, 50 * self.screen_resolution))
             pygame.draw.rect(self.screen, ('#FFFFFF'), (185 * self.screen_resolution, 200 * self.screen_resolution,
                                                         150 * self.screen_resolution, 50 * self.screen_resolution))
+            pygame.draw.rect(self.screen, ('#FFFFFF'), (185 * self.screen_resolution, 250 * self.screen_resolution,
+                                                        150 * self.screen_resolution, 50 * self.screen_resolution))
             txt = q.render(f'{SCREEN_RESOLATION_LIST[0]}', True, (0, 0, 0))
-            self.screen.blit(txt, (225 * self.screen_resolution, 160 * self.screen_resolution))
+            self.screen.blit(txt, (215 * self.screen_resolution, 160 * self.screen_resolution))
             txt = q.render(f'{SCREEN_RESOLATION_LIST[1]}', True, (0, 0, 0))
-            self.screen.blit(txt, (225 * self.screen_resolution, 210 * self.screen_resolution))
+            self.screen.blit(txt, (215 * self.screen_resolution, 210 * self.screen_resolution))
+            txt = q.render(f'{SCREEN_RESOLATION_LIST[2]}', True, (0, 0, 0))
+            self.screen.blit(txt, (215 * self.screen_resolution, 260 * self.screen_resolution))
         return list([[740 * self.screen_resolution, 100 * self.screen_resolution,
                       790 * self.screen_resolution, 150 * self.screen_resolution],
                      [675 * self.screen_resolution, 100 * self.screen_resolution,
@@ -91,7 +95,10 @@ class Nastroiki(GlavnoeMenu):
                      [185 * self.screen_resolution, 150 * self.screen_resolution,
                       335 * self.screen_resolution, 200 * self.screen_resolution],
                      [185 * self.screen_resolution, 200 * self.screen_resolution,
-                      335 * self.screen_resolution, 250 * self.screen_resolution]])
+                      335 * self.screen_resolution, 250 * self.screen_resolution],
+                     [185 * self.screen_resolution, 250 * self.screen_resolution,
+                      335 * self.screen_resolution, 300 * self.screen_resolution],
+                     ])
 
     def type(self):
         return 'Nastroiki'
@@ -105,15 +112,15 @@ class Nastroiki(GlavnoeMenu):
             elif (q == 1 and VOLUEME_M > 0):
                 VOLUEME_M = VOLUEME_M - 0.05
                 VOLUEME_M = round(VOLUEME_M, 2)
+            return VOLUEME_M
         else:
             if (q == 0 and VOLUEME_Z < 1):
                 VOLUEME_Z = VOLUEME_Z + 0.05
                 VOLUEME_Z = round(VOLUEME_Z, 2)
-                return VOLUEME_Z
             elif (q == 1 and VOLUEME_Z > 0):
                 VOLUEME_Z = VOLUEME_Z - 0.05
                 VOLUEME_Z = round(VOLUEME_Z, 2)
-                return VOLUEME_Z
+            return VOLUEME_Z
 
     def new_resolution(self, q):
         global SCREEN_RESOLATION_LIST
