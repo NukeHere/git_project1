@@ -91,24 +91,34 @@ if __name__ == '__main__':
                         sound1.set_volume(VOLUEME_Z)
                         sound1.play(0)
                         sound_main.stop()
-                        sound_game.set_volume(VOLUEME_M)
-                        sound_game.play(-1)
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, 'голая земля.png')
+                        sprite = pygame.sprite.Sprite()
+                        sprite.image = load_image('голая земля.png')
+                        sprite.rect = sprite.image.get_rect()
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, sprite)
+                        sound_main.set_volume(VOLUEME_M)
+                        sound_main.play(-1)
                     elif (pos_knopok[1][0] <= event.pos[0] <= pos_knopok[1][2]
                           and pos_knopok[1][1] <= event.pos[1] <= pos_knopok[1][3]):
                         sound1.set_volume(VOLUEME_Z)
                         sound1.play(0)
                         sound_main.stop()
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, 'болото.png')
+                        sprite = pygame.sprite.Sprite()
+                        sprite.image = load_image('болото.png')
+                        sprite.rect = sprite.image.get_rect()
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, sprite)
+                        sound_main.set_volume(VOLUEME_M)
+                        sound_main.play(-1)
                     elif (pos_knopok[2][0] <= event.pos[0] <= pos_knopok[2][2]
                           and pos_knopok[2][1] <= event.pos[1] <= pos_knopok[2][3]):
                         sound1.set_volume(VOLUEME_Z)
                         sound1.play(0)
                         sound_main.stop()
-                        sound_game.set_volume(VOLUEME_M)
-                        sound_game.play(-1)
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, 'пустыня.png')
-
+                        sprite = pygame.sprite.Sprite()
+                        sprite.image = load_image('пустыня.png')
+                        sprite.rect = sprite.image.get_rect()
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, sprite)
+                        sound_main.set_volume(VOLUEME_M)
+                        sound_main.play(-1)
                 elif (q.type() == 'Nastroiki'):
                     if (not f):
                         if (pos_knopok[5][0] <= event.pos[0] <= pos_knopok[5][2]
