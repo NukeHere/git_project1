@@ -35,7 +35,7 @@ class Ammo(pygame.sprite.Sprite):
     # image_orig = load_image('tank_body.png')
     # base scale 804x368
 
-    def __init__(self, nm, team, ang, bs_dmg=20, sp=20):
+    def __init__(self, nm, team, ang, pos, bs_dmg=20, sp=20):
         super().__init__(all_sprites)
         if team == 'A':
             self.add(a_team)
@@ -44,13 +44,14 @@ class Ammo(pygame.sprite.Sprite):
         self.team = team
         self.name = 'bul'
         self.image = load_image(nm)
-        self.image_orig = pygame.transform.scale(self.image, (67, 31))
-        self.image = pygame.transform.scale(self.image, (67, 31))
+        self.image_orig = pygame.transform.scale(self.image, (13, 7))
+        self.image = pygame.transform.scale(self.image, (13, 7))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.ang = ang
         self.crspeed = sp
         self.bs_dmg = bs_dmg
+        self.rect.x, self.rect.y = pos
 
     def update(self):
         self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
@@ -60,26 +61,29 @@ class Ammo(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
         if self.team == "A":
             for sprite in b_team:
-                if pygame.sprite.spritecollideany(self, b_team):
-                    if pygame.sprite.spritecollideany(self, b_team).name == 'tonk' and pygame.sprite.collide_mask(self, sprite):
+                if pygame.sprite.spritecollideany(self, b_team) and pygame.sprite.collide_mask(self, sprite):
+                    a = pygame.sprite.spritecollideany(self, b_team)
+                    # print(a.name)
+                    if a.name not in ['bul', 'Aim']:
+                        sprite.xp -= max(self.bs_dmg // 2 - sprite.armour, 0)
+                    if a.name == 'tonk':
                         sprite.xp -= max(self.bs_dmg - sprite.armour, 0)
                         self.image = load_image('null.png')
                         self.crspeed = 0
                         self.remove(a_team)
-                        self.remove(all_prites)
-                    elif sprite.name not in ['bul', 'Aim']:
-                        sprite.xp -= max(self.bs_dmg - sprite.armour, 0) // 2
+                        self.remove(all_sprites)
         if self.team == "B":
             for sprite in a_team:
-                if pygame.sprite.spritecollideany(self, a_team):
-                    if pygame.sprite.spritecollideany(self, a_team).name == 'tonk' and pygame.sprite.collide_mask(self, sprite):
+                if pygame.sprite.spritecollideany(self, a_team) and pygame.sprite.collide_mask(self, sprite):
+                    a = pygame.sprite.spritecollideany(self, a_team).name
+                    if a not in ['bul', 'Aim']:
+                        sprite.xp -= max(self.bs_dmg // 2 - sprite.armour, 0)
+                    if a.name == 'tonk':
                         sprite.xp -= max(self.bs_dmg - sprite.armour, 0)
                         self.image = load_image('null.png')
                         self.crspeed = 0
                         self.remove(b_team)
-                        self.remove(all_prites)
-                    elif sprite.name not in ['bul', 'Aim']:
-                        sprite.xp -= max(self.bs_dmg - sprite.armour, 0) // 2
+                        self.remove(all_sprites)
 
 
 class Aim(pygame.sprite.Sprite):
@@ -130,6 +134,7 @@ class TankGun(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
+        self.mask = pygame.mask.from_surface(self.image)
         kk = math.atan((self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
         if self.aim.rect.y < self.rect.center[1]:
             if self.aim.rect.x > self.rect.center[0]:
@@ -169,7 +174,7 @@ class TankGun(pygame.sprite.Sprite):
             # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
     def fire(self):
-        Ammo('bul.png', "A", self.ang)
+        Ammo('bul.png', "A", self.ang, self.rect.center, sp=10)
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -220,7 +225,7 @@ class BaseTank(pygame.sprite.Sprite):
 
 
 class MainGame:
-    def __init__(self, w, h, map=None):
+    def __init__(self, w, h, maap=None):
         global width, height, all_sprites, player, barriers, a_team, b_team, aims
         pygame.init()
         size = width, height = w, h
@@ -231,12 +236,12 @@ class MainGame:
         barriers = pygame.sprite.Group()
         all_sprites = pygame.sprite.Group()
         clock = pygame.time.Clock()
-        tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A', 10, 100)
-        tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B', 10, 100)
+        tank1 = BaseTank(0, 0, 0, 'tank_body.png', 'A', 16, 100)
+        tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B', 16, 100)
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True)
-        gun1 = TankGun('gun1.png', "A", tank1, ai1, 5)
-        gun2 = TankGun('gun1.png', "B", tank2, ai2, 5)
+        gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
+        gun2 = TankGun('gun1.png', "B", tank2, ai2, 8)
         camera = Camera()
         running = True
         player = tank1
@@ -246,6 +251,7 @@ class MainGame:
         k2 = 1
         k3 = 1
         mousepos = (0, 0)
+        pic = load_image("болото.png")
         while running:
             print(tank2.xp)
             k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
@@ -294,6 +300,7 @@ class MainGame:
             # print(player.crspeed, k, player.ang / 0.017)
             # debug out
             screen.fill((0, 0, 0))
+            screen.blit(pic, (0, 0))
             camera.update(player)
             for sprite in all_sprites:
                 camera.apply(sprite)
