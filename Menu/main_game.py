@@ -16,6 +16,30 @@ def load_image(name, colorkey=None):
     return image
 
 
+class Textrender:
+    def __init__(self, screen, screen_resolution):
+        self.screen = screen
+        self.screen_resolution = screen_resolution
+
+    def risovanie(self, pic):
+        pygame.font.init()
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(pic, (0, 0))
+        pygame.draw.rect(self.screen, ('#808080'), (10 * self.screen_resolution,
+                                                    560 * self.screen_resolution, 135 * self.screen_resolution,
+                                                    40 * self.screen_resolution))
+        pygame.draw.rect(self.screen, ('#808080'), (645 * self.screen_resolution,
+                                                    560 * self.screen_resolution, 145 * self.screen_resolution,
+                                                    40 * self.screen_resolution))
+        q = pygame.font.SysFont('arial', int(25 * self.screen_resolution))
+        txt = q.render('Твои XP: ' + str(100), True, (255, 255, 255))
+        self.screen.blit(txt, (15 * self.screen_resolution,
+                               565 * self.screen_resolution))
+        txt = q.render('XP врага: ' + str(100), True, (255, 255, 255))
+        self.screen.blit(txt, (650 * self.screen_resolution,
+                               565 * self.screen_resolution))
+
+
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self):
@@ -312,6 +336,7 @@ class MainGame:
         mousepos = (0, 0)
         pic = load_image("болото.png")
         sound_battle.play(-1)
+        t = Textrender(screen, screen_resolution=w / 800)
         while running:
             print(tank2.xp)
             timer += 0.01
@@ -362,7 +387,7 @@ class MainGame:
             # print(player.crspeed, k, player.ang / 0.017)
             # debug out
             screen.fill((0, 0, 0))
-            screen.blit(pic, (0, 0))
+            t.risovanie(pic)
             camera.update(player)
             for sprite in all_sprites:
                 camera.apply(sprite)
