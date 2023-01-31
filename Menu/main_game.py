@@ -34,30 +34,45 @@ class Camera:
 
 
 class Track(pygame.sprite.Sprite):
-    def __init__(self, nm, team, body, armour):
+    def __init__(self, nm, nm2, team, body, armour, start_ang):
         super().__init__(all_sprites)
         if team == 'A':
             self.add(a_team)
         else:
             self.add(b_team)
         self.team = team
-        self.name = 'gun'
+        self.name = 'track'
         self.image = load_image(nm)
-        self.image_orig = pygame.transform.scale(self.image, (67, 17))
-        self.image = pygame.transform.scale(self.image, (67, 17))
+        self.image_orig = pygame.transform.scale(self.image, (67, 65))
+        self.image = pygame.transform.scale(self.image, (67, 65))
+        self.image2 = pygame.transform.scale(load_image(nm2), (67, 65))
         self.rect = self.image.get_rect()
         self.rect.move(body.rect.x, body.rect.y)
         self.ang = body.ang + 1
         self.body = body
+        self.stang = start_ang * 0.017
         self.armour = armour
-        self.xp = body.xp
+        self.repd = True
+        self.tm = 0
 
     def update(self):
-        self.ang = self.body.ang
-        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+        self.ang = self.body.ang + self.stang
+        if self.repd:
+            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+        else:
+            self.image = pygame.transform.rotate(self.image2, -(self.ang / 0.017))
+            if timer >= self.tm:
+                self.tm = 0
+                self.repd = True
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
         self.mask = pygame.mask.from_surface(self.image)
+
+    def xpd(self, dmg):
+        if self.repd:
+            self.repd = False
+            self.body.xp -= dmg
+        self.tm = timer + 5
 
 
 class Ammo(pygame.sprite.Sprite):
@@ -92,12 +107,10 @@ class Ammo(pygame.sprite.Sprite):
         if self.team == "A":
             for sprite in b_team:
                 if pygame.sprite.spritecollideany(self, b_team) and pygame.sprite.collide_mask(self, sprite):
-                    a = pygame.sprite.spritecollideany(self, b_team)
-                    # print(a.name)
-                    if a.name not in ['bul', 'Aim']:
-                        sprite.xp -= max(self.bs_dmg // 2 - sprite.armour, 0)
-                    if a.name == 'tonk':
-                        sprite.xp -= max(self.bs_dmg - sprite.armour, 0)
+                    if sprite.name not in ['bul', 'Aim', 'tonk']:
+                        sprite.xpd(max(self.bs_dmg // 2 - sprite.armour, 0))
+                    if sprite.name == 'tonk':
+                        sprite.xpd(max(self.bs_dmg - sprite.armour, 0))
                         self.image = load_image('null.png')
                         self.crspeed = 0
                         self.remove(a_team)
@@ -105,10 +118,9 @@ class Ammo(pygame.sprite.Sprite):
         if self.team == "B":
             for sprite in a_team:
                 if pygame.sprite.spritecollideany(self, a_team) and pygame.sprite.collide_mask(self, sprite):
-                    a = pygame.sprite.spritecollideany(self, a_team)
-                    if a.name not in ['bul', 'Aim']:
+                    if sprite.name not in ['bul', 'Aim']:
                         sprite.xp -= max(self.bs_dmg // 2 - sprite.armour, 0)
-                    if a.name == 'tonk':
+                    if sprite.name == 'tonk':
                         sprite.xp -= max(self.bs_dmg - sprite.armour, 0)
                         self.image = load_image('null.png')
                         self.crspeed = 0
@@ -133,7 +145,7 @@ class Aim(pygame.sprite.Sprite):
 
     def update(self):
         if self.aimode:
-            self.rect.x, self.rect.y = player.center
+            self.rect.x, self.rect.y = player.rect.center
 
     def mousemoved(self, pos):
         if not self.aimode:
@@ -158,14 +170,14 @@ class TankGun(pygame.sprite.Sprite):
         self.body = body
         self.aim = aim
         self.armour = armour
-        self.xp = body.xp
 
     def update(self):
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
         self.mask = pygame.mask.from_surface(self.image)
-        kk = math.atan((self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
+        kk = math.atan(
+            (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
         if self.aim.rect.y < self.rect.center[1]:
             if self.aim.rect.x > self.rect.center[0]:
                 kk = -(90 * 0.017 + kk)
@@ -205,6 +217,9 @@ class TankGun(pygame.sprite.Sprite):
 
     def fire(self):
         Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10)
+
+    def xpd(self, dmg):
+        self.body.xp -= dmg
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -253,11 +268,15 @@ class BaseTank(pygame.sprite.Sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
 
+    def xpd(self, dmg):
+        self.xp -= dmg
+
 
 class MainGame:
     def __init__(self, w, h, maap=None):
-        global width, height, all_sprites, player, barriers, a_team, b_team, aims
+        global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer
         VOLUEME_M, VOLUEME_Z = 1, 1
+        timer = 0
         pygame.init()
         size = width, height = w, h
         sound_battle = pygame.mixer.Sound(os.path.join('data',
@@ -274,7 +293,10 @@ class MainGame:
         clock = pygame.time.Clock()
         tank1 = BaseTank(0, 0, 0, 'tank_body.png', 'A', 16, 100)
         tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B', 16, 100)
-        track11 = Track('track1.png', "A", tank1, 8)
+        track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
+        track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
+        track21 = Track('track1.png', 'track2.png', "B", tank2, 8, 0)
+        track22 = Track('track1.png', 'track2.png', "B", tank2, 8, 180)
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True)
         gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
@@ -292,6 +314,7 @@ class MainGame:
         sound_battle.play(-1)
         while running:
             print(tank2.xp)
+            timer += 0.01
             k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
