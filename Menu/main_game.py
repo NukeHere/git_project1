@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 import math
+from collections import deque
 
 
 # from main import VOLUEME_M, VOLUEME_Z
@@ -16,15 +17,88 @@ def load_image(name, colorkey=None):
     return image
 
 
+class AI:
+    def __init__(self, map1, aimb, aimg, body):
+        self.mp = map1
+        self.mp1 = self.mp[:]
+        self.aim1 = aimb
+        self.aim2 = aimg
+        self.bd = body
+        self.tm = 0
+        self.path = []
+        self.i = 0
+        self.aim2.ai = self
+
+    def update(self):
+        def bfs():
+            plcoords = (player.rect.x + 1) // 50 + (player.rect.y + 1) // 50 * 40
+            #print(plcoords)
+            d = deque()
+            cur2 = (self.bd.rect.x + 1) // 50 + (self.bd.rect.y + 1) // 50 * 40
+            cur = cur2 + 1 - 1
+            #print(cur)
+            self.mp1 = self.mp[:]
+            self.mp1[cur][0] = 1
+            while cur != plcoords:
+                if cur not in [i for i in range(40)] + [i for i in range(1559, 1600)] + [i * 40 for i in range(40)] + [i * 40 - 1 for i in range(1, 41)]:
+                    if 2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0:
+                        d.append(cur - 1)
+                        self.mp1[cur - 1] = [self.mp1[cur][0] + 1, cur]
+                    if 2000 > self.mp1[cur + 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 1][0] == 0:
+                        d.append(cur + 1)
+                        self.mp1[cur + 1] = [self.mp1[cur][0] + 1, cur]
+                    if 2000 > self.mp1[cur - 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 40][0] == 0:
+                        d.append(cur - 40)
+                        self.mp1[cur - 40] = [self.mp1[cur][0] + 1, cur]
+                    if 2000 > self.mp1[cur + 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 40][0] == 0:
+                        d.append(cur + 40)
+                        self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
+                    #if cur == 409:
+                        #print(self.mp1[cur + 1], self.mp1[cur - 1], self.mp1[cur])
+                if len(d) == 0:
+                    cur2 = plcoords
+                    break
+                cur = d.popleft()
+            l = [plcoords]
+            cur = plcoords
+            while cur != cur2:
+                #print(cur)
+                cur = self.mp1[cur][1]
+                l.append(cur)
+            return l
+
+        if timer >= self.tm:
+            self.tm = timer + 5
+            self.path = bfs()
+        if len(self.path) != 0 and (self.bd.rect.x + 1) // 50 + (self.bd.rect.y + 1) // 50 * 40 == self.path[self.i]:
+            if self.i + 1 == len(self.path):
+                self.tm = 0
+            else:
+                self.i += 1
+
+
+class GameObj(pygame.sprite.Sprite):
+    def __init__(self, nm, x, y, w, h, col=False, col_map=None):
+        super().__init__(all_sprites)
+        self.name = 'obj'
+        self.image = load_image(nm)
+        self.image_orig = pygame.transform.scale(self.image, (w, h))
+        self.image = pygame.transform.scale(self.image, (w, h))
+        if col:
+            self.rect = self.image.get_rect()
+            self.colmp = col_map
+        else:
+            self.rect = pygame.Rect(0, 0, 0, 0)
+        self.rect.x, self.rect.y = x, y
+
+
 class Textrender:
     def __init__(self, screen, screen_resolution):
         self.screen = screen
         self.screen_resolution = screen_resolution
 
-    def risovanie(self, pic):
+    def risovanie(self):
         pygame.font.init()
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(pic, (0, 0))
         pygame.draw.rect(self.screen, ('#808080'), (10 * self.screen_resolution,
                                                     560 * self.screen_resolution, 135 * self.screen_resolution,
                                                     40 * self.screen_resolution))
@@ -154,7 +228,7 @@ class Ammo(pygame.sprite.Sprite):
 
 class Aim(pygame.sprite.Sprite):
 
-    def __init__(self, team, is_ai=False):
+    def __init__(self, team, is_ai=False, aim=False, ai=None):
         super().__init__(all_sprites)
         if team == 'A':
             self.add(a_team)
@@ -165,11 +239,18 @@ class Aim(pygame.sprite.Sprite):
         self.name = 'Aim'
         self.rect = pygame.Rect(1, 1, 1, 1)
         self.aimode = is_ai
+        self.aim = aim
         self.image = load_image('null.png')
+        self.ai = ai
 
     def update(self):
-        if self.aimode:
+        if self.aimode and self.aim:
             self.rect.x, self.rect.y = player.rect.center
+        elif self.aimode and not self.aim and self.ai:
+            if len(self.ai.path) != 0:
+                self.rect.x, self.rect.y = 50 * self.ai.path[self.ai.i] % 40, 50 * self.ai.path[self.ai.i] // 40
+            else:
+                self.rect.x, self.rect.y = 500, 500
 
     def mousemoved(self, pos):
         if not self.aimode:
@@ -251,7 +332,7 @@ class BaseTank(pygame.sprite.Sprite):
     # image_orig = load_image('tank_body.png')
     # base scale 804x368
 
-    def __init__(self, x, y, angle, nm, team, armour, xp):
+    def __init__(self, x, y, angle, nm, team, armour, xp, aim=None):
         super().__init__(all_sprites)
         if team == 'A':
             self.add(a_team)
@@ -270,6 +351,7 @@ class BaseTank(pygame.sprite.Sprite):
         self.crspeed = 0
         self.armour = armour
         self.xp = xp
+        self.aim = aim
 
     def update(self):
         self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
@@ -291,6 +373,8 @@ class BaseTank(pygame.sprite.Sprite):
                         pygame.sprite.collide_mask(self, sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
+        if self.aim:
+            self.rect.x, self.rect.y = self.aim.rect.center
 
     def xpd(self, dmg):
         self.xp -= dmg
@@ -315,17 +399,23 @@ class MainGame:
         barriers = pygame.sprite.Group()
         all_sprites = pygame.sprite.Group()
         clock = pygame.time.Clock()
-        tank1 = BaseTank(0, 0, 0, 'tank_body.png', 'A', 16, 100)
-        tank2 = BaseTank(300, 300, 0, 'tank_body.png', 'B', 16, 100)
+        if maap == None:
+            maap = [GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
+                    GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500)]
+        tank1 = BaseTank(300, 300, 0, 'tank_body.png', 'A', 16, 100)
+        tank2 = BaseTank(500, 500, 0, 'tank_body.png', 'B', 16, 100)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 8, 0)
         track22 = Track('track1.png', 'track2.png', "B", tank2, 8, 180)
         ai1 = Aim("A")
-        ai2 = Aim("B", is_ai=True)
+        ai2 = Aim("B", is_ai=True, aim=True)
+        ai3 = Aim('b', is_ai=True, aim=False)
+        tank2.aim = ai3
         gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
         gun2 = TankGun('gun1.png', "B", tank2, ai2, 8)
         camera = Camera()
+        ai11 = AI([[i, 0] for i in range(1600)], ai3, ai2, tank2)
         running = True
         player = tank1
         m1 = False
@@ -334,11 +424,11 @@ class MainGame:
         k2 = 1
         k3 = 1
         mousepos = (0, 0)
-        pic = load_image("болото.png")
         sound_battle.play(-1)
         t = Textrender(screen, screen_resolution=w / 800)
         while running:
-            print(tank2.xp)
+            print(tank2.rect.x, tank2.rect.y, tank1.rect.x, tank1.rect.y)
+            ai11.update()
             timer += 0.01
             k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
             for event in pygame.event.get():
@@ -384,10 +474,7 @@ class MainGame:
             if m2:
                 player.ang += (0.6 * k3 * 0.017)
                 player.ang = (player.ang / 0.017) % 360 * 0.017
-            # print(player.crspeed, k, player.ang / 0.017)
-            # debug out
             screen.fill((0, 0, 0))
-            t.risovanie(pic)
             camera.update(player)
             for sprite in all_sprites:
                 camera.apply(sprite)
@@ -395,6 +482,7 @@ class MainGame:
                 spr.mousemoved(mousepos)
             all_sprites.update()
             all_sprites.draw(screen)
+            t.risovanie()
             pygame.display.flip()
             clock.tick(100)
 
