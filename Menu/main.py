@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+import csv
 from glavnoemenu import GlavnoeMenu
 from newgame import Vibor
 from nastroiki import Nastroiki
@@ -39,6 +40,7 @@ if __name__ == '__main__':
     pic = load_image("болото.png")
     f = True
     sound_main.play(-1)
+    listr = []
     while run:
         if (f):
             pos_knopok = q.risovanie(pic)
@@ -93,7 +95,10 @@ if __name__ == '__main__':
                         sprite = pygame.sprite.Sprite()
                         sprite.image = load_image('голая земля.png')
                         sprite.rect = sprite.image.get_rect()
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, sprite)
+                        csvfile = open('data/Болото.csv', encoding="utf8")
+                        listr = csv.reader(csvfile, delimiter=',', quotechar='"')
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite)
+                        csvfile.close()
                         sound_main.set_volume(VOLUEME_M)
                         sound_main.play(-1)
                     elif (pos_knopok[1][0] <= event.pos[0] <= pos_knopok[1][2]
@@ -103,8 +108,11 @@ if __name__ == '__main__':
                         sound_main.stop()
                         sprite = pygame.sprite.Sprite()
                         sprite.image = load_image('болото.png')
+                        csvfile = open('data/Болото.csv', encoding="utf8")
+                        listr = csv.reader(csvfile, delimiter=',', quotechar='"')
                         sprite.rect = sprite.image.get_rect()
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, sprite)
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite)
+                        csvfile.close()
                         sound_main.set_volume(VOLUEME_M)
                         sound_main.play(-1)
                     elif (pos_knopok[2][0] <= event.pos[0] <= pos_knopok[2][2]
@@ -115,7 +123,10 @@ if __name__ == '__main__':
                         sprite = pygame.sprite.Sprite()
                         sprite.image = load_image('пустыня.png')
                         sprite.rect = sprite.image.get_rect()
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, sprite)
+                        csvfile = open('data/Болото.csv', encoding="utf8")
+                        listr = csv.reader(csvfile, delimiter=',', quotechar='"')
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite)
+                        csvfile.close()
                         sound_main.set_volume(VOLUEME_M)
                         sound_main.play(-1)
                 elif (q.type() == 'Nastroiki'):
