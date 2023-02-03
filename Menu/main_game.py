@@ -27,54 +27,58 @@ class AI:
         self.tm = 0
         self.path = []
         self.i = 0
-        self.aim2.ai = self
 
     def update(self):
         def bfs():
-            plcoords = (player.rect.x + 1) // 50 + (player.rect.y + 1) // 50 * 40
-            #print(plcoords)
+            plcoords = (player.rect.x - delta.rect.x) // 50 + (player.rect.y - delta.rect.y) // 50 * 40
+            # print(plcoords)
             d = deque()
-            cur2 = (self.bd.rect.x + 1) // 50 + (self.bd.rect.y + 1) // 50 * 40
+            cur2 = (self.bd.rect.x - delta.rect.x) // 50 + (self.bd.rect.y - delta.rect.y) // 50 * 40
             cur = cur2 + 1 - 1
-            #print(cur)
+            # print(cur)
             self.mp1 = self.mp[:]
             self.mp1[cur][0] = 1
-            while cur != plcoords:
-                if cur not in [i for i in range(40)] + [i for i in range(1559, 1600)] + [i * 40 for i in range(40)] + [i * 40 - 1 for i in range(1, 41)]:
-                    if 2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0:
-                        d.append(cur - 1)
-                        self.mp1[cur - 1] = [self.mp1[cur][0] + 1, cur]
-                    if 2000 > self.mp1[cur + 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 1][0] == 0:
-                        d.append(cur + 1)
-                        self.mp1[cur + 1] = [self.mp1[cur][0] + 1, cur]
-                    if 2000 > self.mp1[cur - 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 40][0] == 0:
-                        d.append(cur - 40)
-                        self.mp1[cur - 40] = [self.mp1[cur][0] + 1, cur]
-                    if 2000 > self.mp1[cur + 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 40][0] == 0:
-                        d.append(cur + 40)
-                        self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
-                    #if cur == 409:
-                        #print(self.mp1[cur + 1], self.mp1[cur - 1], self.mp1[cur])
-                if len(d) == 0:
-                    cur2 = plcoords
-                    break
+            if 2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0:
+                d.append(cur - 1)
+                self.mp1[cur - 1] = [self.mp1[cur][0] + 1, cur]
+            if 2000 > self.mp1[cur + 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 1][0] == 0:
+                d.append(cur + 1)
+                self.mp1[cur + 1] = [self.mp1[cur][0] + 1, cur]
+            if 2000 > self.mp1[cur - 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 40][0] == 0:
+                d.append(cur - 40)
+                self.mp1[cur - 40] = [self.mp1[cur][0] + 1, cur]
+            if 2000 > self.mp1[cur + 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 40][0] == 0:
+                d.append(cur + 40)
+                self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
+            while len(d) > 0:
+                if cur % 40 != 0 and (2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0):
+                    d.append(cur - 1)
+                    self.mp1[cur - 1] = [self.mp1[cur][0] + 1, cur]
+                if cur % 40 != 39 and (2000 > self.mp1[cur + 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 1][0] == 0):
+                    d.append(cur + 1)
+                    self.mp1[cur + 1] = [self.mp1[cur][0] + 1, cur]
+                if cur > 39 and (2000 > self.mp1[cur - 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 40][0] == 0):
+                    d.append(cur - 40)
+                    self.mp1[cur - 40] = [self.mp1[cur][0] + 1, cur]
+                if cur < 1560 and (2000 > self.mp1[cur + 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 40][0] == 0):
+                    d.append(cur + 40)
+                    self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
                 cur = d.popleft()
             l = [plcoords]
             cur = plcoords
-            while cur != cur2:
-                #print(cur)
+            i = 0
+            while cur != cur2 and i < 2000:
+                # print(cur)
                 cur = self.mp1[cur][1]
                 l.append(cur)
-            return l
+                i += 1
+            print(l[::-1])
+            return l[::-1]
 
-        if timer >= self.tm:
-            self.tm = timer + 5
+        if timer >= self.tm or self.i == len(self.path) - 1:
+            self.tm = timer + 2
             self.path = bfs()
-        if len(self.path) != 0 and (self.bd.rect.x + 1) // 50 + (self.bd.rect.y + 1) // 50 * 40 == self.path[self.i]:
-            if self.i + 1 == len(self.path):
-                self.tm = 0
-            else:
-                self.i += 1
+            self.i = 0
 
 
 class GameObj(pygame.sprite.Sprite):
@@ -109,7 +113,7 @@ class Textrender:
         txt = q.render('Твои XP: ' + str(100), True, (255, 255, 255))
         self.screen.blit(txt, (15 * self.screen_resolution,
                                565 * self.screen_resolution))
-        txt = q.render('XP врага: ' + str(100), True, (255, 255, 255))
+        txt = q.render('XP врага: ' + str(cur_fps), True, (255, 255, 255))
         self.screen.blit(txt, (650 * self.screen_resolution,
                                565 * self.screen_resolution))
 
@@ -242,15 +246,19 @@ class Aim(pygame.sprite.Sprite):
         self.aim = aim
         self.image = load_image('null.png')
         self.ai = ai
+        self.tm = 0
 
     def update(self):
         if self.aimode and self.aim:
             self.rect.x, self.rect.y = player.rect.center
-        elif self.aimode and not self.aim and self.ai:
-            if len(self.ai.path) != 0:
-                self.rect.x, self.rect.y = 50 * self.ai.path[self.ai.i] % 40, 50 * self.ai.path[self.ai.i] // 40
-            else:
-                self.rect.x, self.rect.y = 500, 500
+        if self.aimode and not self.aim and self.ai:
+            if len(self.ai.path) != 0 and self.tm <= timer:
+                self.rect.x, self.rect.y = 50 * (self.ai.path[self.ai.i] % 40) + delta.rect.x, \
+                                           50 * (self.ai.path[self.ai.i] // 40) + delta.rect.y
+                if self.ai.i < len(self.ai.path) - 1:
+                    self.ai.i += 1
+                print(self.ai.path[self.ai.i])
+                self.tm = timer + 3
 
     def mousemoved(self, pos):
         if not self.aimode:
@@ -315,9 +323,9 @@ class TankGun(pygame.sprite.Sprite):
                 self.ang = kk
             elif e1 <= e2:
                 # self.ang < kk or
-                self.ang += 0.017 * 1
+                self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
             else:
-                self.ang -= 0.017 * 1
+                self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
             # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
     def fire(self):
@@ -374,7 +382,53 @@ class BaseTank(pygame.sprite.Sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
         if self.aim:
-            self.rect.x, self.rect.y = self.aim.rect.center
+            kk = math.atan(
+                (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
+            if self.aim.rect.y < self.rect.center[1]:
+                if self.aim.rect.x > self.rect.center[0]:
+                    kk = -(90 * 0.017 + kk)
+                else:
+                    kk = -90 * 0.017 - kk
+            else:
+                kk = 90 * 0.017 - kk
+            if self.ang > 180 * 0.017:
+                self.ang = -180 * 0.017
+            elif self.ang < -180 * 0.017:
+                self.ang = 180 * 0.017
+            if self.ang != kk:
+                e1 = 0
+                e2 = 0
+                if self.ang > 0:
+                    if kk > 0:
+                        e1 = -self.ang + kk if kk > self.ang else 3.06 - self.ang + kk + 3.06
+                        e2 = self.ang - kk if self.ang > kk else 3.06 - self.ang + kk + 3.06
+                    else:
+                        e1 = 3.06 - self.ang - kk
+                        e2 = self.ang - kk
+                else:
+                    if kk > 0:
+                        e1 += -self.ang + kk
+                        e2 += 3.06 + self.ang + 3.06 - self.ang
+                    else:
+                        e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
+                        e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
+                if abs(self.ang - kk) <= 0.017:
+                    self.ang = kk
+                elif e1 <= e2:
+                    # self.ang < kk or
+                    self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
+                else:
+                    self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
+            if (self.rect.x - delta.rect.x + 1) // 50 + (self.rect.y - delta.rect.y + 1) // 50 * 40 != (self.aim.rect.x
+                - delta.rect.x + 1) // 50 + (self.aim.rect.y - delta.rect.y + 1) // 50 * 40 and self.crspeed < 6:
+                if self.ang == kk:
+                    self.crspeed += 0.002 * (100 / max(1, int(cur_fps)))
+            else:
+                if self.crspeed > 0:
+                    self.crspeed -= 0.004 * 4 * (100 / max(1, int(cur_fps)))
+                else:
+                    self.crspeed = 0
+            #self.rect.x, self.rect.y = self.aim.rect.center
 
     def xpd(self, dmg):
         self.xp -= dmg
@@ -382,7 +436,7 @@ class BaseTank(pygame.sprite.Sprite):
 
 class MainGame:
     def __init__(self, w, h, maap=None):
-        global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer
+        global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta
         VOLUEME_M, VOLUEME_Z = 1, 1
         timer = 0
         pygame.init()
@@ -402,7 +456,8 @@ class MainGame:
         if maap == None:
             maap = [GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
                     GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500)]
-        tank1 = BaseTank(300, 300, 0, 'tank_body.png', 'A', 16, 100)
+        delta = GameObj('null.png', 0, 0, 1, 1)
+        tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A', 16, 100)
         tank2 = BaseTank(500, 500, 0, 'tank_body.png', 'B', 16, 100)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
@@ -416,6 +471,7 @@ class MainGame:
         gun2 = TankGun('gun1.png', "B", tank2, ai2, 8)
         camera = Camera()
         ai11 = AI([[i, 0] for i in range(1600)], ai3, ai2, tank2)
+        ai3.ai = ai11
         running = True
         player = tank1
         m1 = False
@@ -427,8 +483,8 @@ class MainGame:
         sound_battle.play(-1)
         t = Textrender(screen, screen_resolution=w / 800)
         while running:
-            print(tank2.rect.x, tank2.rect.y, tank1.rect.x, tank1.rect.y)
             ai11.update()
+            cur_fps = clock.get_fps()
             timer += 0.01
             k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
             for event in pygame.event.get():
@@ -463,16 +519,16 @@ class MainGame:
                     gun1.fire()
                     sound_fire.play(0)
             if m1 and abs(player.crspeed) < maxspeed:
-                player.crspeed += 0.002 * k * k2
+                player.crspeed += 0.002 * k * k2 * (100 / max(1, int(cur_fps)))
             else:
                 if abs(player.crspeed) < 1:
                     player.crspeed = 0
                 elif player.crspeed > 0:
-                    player.crspeed -= 0.018
+                    player.crspeed -= 0.018 * (100 / max(1, int(cur_fps)))
                 elif player.crspeed < 0:
-                    player.crspeed += 0.018
+                    player.crspeed += 0.018 * (100 / max(1, int(cur_fps)))
             if m2:
-                player.ang += (0.6 * k3 * 0.017)
+                player.ang += (0.6 * k3 * 0.017) * (100 / max(1, int(cur_fps)))
                 player.ang = (player.ang / 0.017) % 360 * 0.017
             screen.fill((0, 0, 0))
             camera.update(player)
@@ -488,4 +544,4 @@ class MainGame:
 
 
 if __name__ == '__main__':
-    MainGame(800, 600)
+    MainGame(1000, 1000)
