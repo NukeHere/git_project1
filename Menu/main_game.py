@@ -583,7 +583,7 @@ class MainGame:
         sound_battle.play(-1)
         t = Textrender(screen, screen_resolution=w / 800)
         while running:
-            print(player.rect.x - delta.rect.x, player.rect.y - delta.rect.y)
+            print(tank2.xp, tank3.xp)
             ai12.update()
             ai11.update()
             cur_fps = clock.get_fps()
@@ -591,6 +591,7 @@ class MainGame:
             k = player.maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    sound_battle.stop()
                     running = False
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_w:
