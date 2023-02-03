@@ -34,6 +34,8 @@ class AI:
             # print(plcoords)
             d = deque()
             cur2 = (self.bd.rect.x - delta.rect.x) // 50 + (self.bd.rect.y - delta.rect.y) // 50 * 40
+            if cur2 < 0:
+                return [plcoords]
             cur = cur2 + 1 - 1
             # print(cur)
             self.mp1 = self.mp[:]
@@ -72,12 +74,11 @@ class AI:
                 cur = self.mp1[cur][1]
                 l.append(cur)
                 i += 1
-            print(l[::-1])
             return l[::-1]
 
         if timer >= self.tm or self.i == len(self.path) - 1:
-            self.tm = timer + 2
             self.path = bfs()
+            self.tm = timer + min(3, len(self.path) // 4)
             self.i = 0
 
 
@@ -163,9 +164,11 @@ class Track(pygame.sprite.Sprite):
             self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         else:
             self.image = pygame.transform.rotate(self.image2, -(self.ang / 0.017))
+            self.body.repd = False
             if timer >= self.tm:
                 self.tm = 0
                 self.repd = True
+                self.body.repd = True
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.center = self.body.rect.center
         self.mask = pygame.mask.from_surface(self.image)
@@ -252,13 +255,9 @@ class Aim(pygame.sprite.Sprite):
         if self.aimode and self.aim:
             self.rect.x, self.rect.y = player.rect.center
         if self.aimode and not self.aim and self.ai:
-            if len(self.ai.path) != 0 and self.tm <= timer:
-                self.rect.x, self.rect.y = 50 * (self.ai.path[self.ai.i] % 40) + delta.rect.x, \
-                                           50 * (self.ai.path[self.ai.i] // 40) + delta.rect.y
-                if self.ai.i < len(self.ai.path) - 1:
-                    self.ai.i += 1
-                print(self.ai.path[self.ai.i])
-                self.tm = timer + 3
+            if len(self.ai.path) != 0:
+                self.rect.x, self.rect.y = 50 * (self.ai.path[self.ai.i] % 40) + delta.rect.x + 25, \
+                                           50 * (self.ai.path[self.ai.i] // 40) + delta.rect.y + 25
 
     def mousemoved(self, pos):
         if not self.aimode:
@@ -340,7 +339,7 @@ class BaseTank(pygame.sprite.Sprite):
     # image_orig = load_image('tank_body.png')
     # base scale 804x368
 
-    def __init__(self, x, y, angle, nm, team, armour, xp, aim=None):
+    def __init__(self, x, y, angle, nm, team, armour, xp, maxspeed, aim=None):
         super().__init__(all_sprites)
         if team == 'A':
             self.add(a_team)
@@ -360,10 +359,22 @@ class BaseTank(pygame.sprite.Sprite):
         self.armour = armour
         self.xp = xp
         self.aim = aim
+        self.repd = True
+        self.m1 = 0
+        self.m2 = 0
+        self.k = 0
+        self.k2 = 0
+        self.k3 = 0
+        self.maxspeed = maxspeed
 
     def update(self):
-        self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
+        k = 1
+        if self.repd:
+            self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
                                    self.crspeed * math.sin(self.ang))
+        else:
+            self.crspeed = 0
+            k = 0.4
         self.mask = pygame.mask.from_surface(self.image)
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
@@ -416,26 +427,52 @@ class BaseTank(pygame.sprite.Sprite):
                     self.ang = kk
                 elif e1 <= e2:
                     # self.ang < kk or
-                    self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
+                    self.ang += 0.017 * k * (100 / max(1, int(cur_fps)))
                 else:
-                    self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
-            if (self.rect.x - delta.rect.x + 1) // 50 + (self.rect.y - delta.rect.y + 1) // 50 * 40 != (self.aim.rect.x
-                - delta.rect.x + 1) // 50 + (self.aim.rect.y - delta.rect.y + 1) // 50 * 40 and self.crspeed < 6:
-                if self.ang == kk:
-                    self.crspeed += 0.002 * (100 / max(1, int(cur_fps)))
+                    self.ang -= 0.017 * k * (100 / max(1, int(cur_fps)))
+            if (self.rect.center[0] - delta.rect.x + 1) // 50 + (self.rect.center[1] - delta.rect.y + 1) // 50 * 40 != \
+                    (self.aim.rect.x - delta.rect.x + 1) // 50 + (self.aim.rect.y - delta.rect.y + 1) // 50 * 40:
+                if abs(self.ang - kk) <= 0.017 * k and self.crspeed < self.maxspeed:
+                    if self.crspeed < 1:
+                        self.crspeed = 1
+                    self.crspeed += 0.012 * (100 / max(1, int(cur_fps)))
+                elif self.crspeed > 0.006:
+                    self.crspeed -= 0.006 / k * (100 / max(1, int(cur_fps)))
             else:
-                if self.crspeed > 0:
-                    self.crspeed -= 0.004 * 4 * (100 / max(1, int(cur_fps)))
+                if self.crspeed > 0.02:
+                    self.crspeed -= 0.012 / k * (100 / max(1, int(cur_fps)))
                 else:
                     self.crspeed = 0
-            #self.rect.x, self.rect.y = self.aim.rect.center
+                if self.aim.ai.i < len(self.aim.ai.path) - 1:
+                    self.aim.ai.i += 1
+        else:
+            self.maxspeed = 3
+            if self.m1 and abs(self.crspeed) < self.maxspeed:
+                self.crspeed += 0.002 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
+            else:
+                if abs(self.crspeed) < 1:
+                    self.crspeed = 0
+                elif self.crspeed > 0:
+                    self.crspeed -= 0.018 * (100 / max(1, int(cur_fps)))
+                elif self.crspeed < 0:
+                    self.crspeed += 0.018 * (100 / max(1, int(cur_fps)))
+            if self.m2:
+                self.ang += (0.6 * self.k3 * 0.017) * (100 / max(1, int(cur_fps)))
+                self.ang = (self.ang / 0.017) % 360 * 0.017
 
     def xpd(self, dmg):
         self.xp -= dmg
 
+    def givekf(self, m1, m2, k, k2, k3):
+        self.m1 = m1
+        self.m2 = m2
+        self.k = k
+        self.k2 = k2
+        self.k3 = k3
+
 
 class MainGame:
-    def __init__(self, w, h, maap=None):
+    def __init__(self, w, h, maap, spr):
         global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta
         VOLUEME_M, VOLUEME_Z = 1, 1
         timer = 0
@@ -453,30 +490,38 @@ class MainGame:
         barriers = pygame.sprite.Group()
         all_sprites = pygame.sprite.Group()
         clock = pygame.time.Clock()
-        if maap == None:
+        if maap:
             maap = [GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
                     GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500)]
         delta = GameObj('null.png', 0, 0, 1, 1)
-        tank1 = BaseTank(100, 100, 0, 'tank_body.png', 'A', 16, 100)
-        tank2 = BaseTank(500, 500, 0, 'tank_body.png', 'B', 16, 100)
+        tank1 = BaseTank(0, 0, 0, 'tank_body.png', 'A', 16, 100, 3)
+        tank2 = BaseTank(500, 500, 0, 'tank_body.png', 'B', 16, 100, 3)
+        tank3 = BaseTank(1000, 1000, 0, 'tank_body.png', 'B', 16, 100, 3)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 8, 0)
         track22 = Track('track1.png', 'track2.png', "B", tank2, 8, 180)
+        track31 = Track('track1.png', 'track2.png', "B", tank3, 8, 0)
+        track32 = Track('track1.png', 'track2.png', "B", tank3, 8, 180)
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True, aim=True)
+        ai4 = Aim("B", is_ai=True, aim=True)
         ai3 = Aim('b', is_ai=True, aim=False)
+        ai5 = Aim('b', is_ai=True, aim=False)
         tank2.aim = ai3
+        tank3.aim = ai5
         gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
         gun2 = TankGun('gun1.png', "B", tank2, ai2, 8)
+        gun3 = TankGun('gun1.png', "B", tank3, ai4, 8)
         camera = Camera()
         ai11 = AI([[i, 0] for i in range(1600)], ai3, ai2, tank2)
+        ai12 = AI([[i, 0] for i in range(1600)], ai5, ai4, tank3)
         ai3.ai = ai11
+        ai5.ai = ai12
         running = True
         player = tank1
         m1 = False
         m2 = False
-        maxspeed = 3
         k2 = 1
         k3 = 1
         mousepos = (0, 0)
@@ -486,7 +531,7 @@ class MainGame:
             ai11.update()
             cur_fps = clock.get_fps()
             timer += 0.01
-            k = maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
+            k = player.maxspeed / abs(player.crspeed if player.crspeed != 0 else 1)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -518,18 +563,7 @@ class MainGame:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     gun1.fire()
                     sound_fire.play(0)
-            if m1 and abs(player.crspeed) < maxspeed:
-                player.crspeed += 0.002 * k * k2 * (100 / max(1, int(cur_fps)))
-            else:
-                if abs(player.crspeed) < 1:
-                    player.crspeed = 0
-                elif player.crspeed > 0:
-                    player.crspeed -= 0.018 * (100 / max(1, int(cur_fps)))
-                elif player.crspeed < 0:
-                    player.crspeed += 0.018 * (100 / max(1, int(cur_fps)))
-            if m2:
-                player.ang += (0.6 * k3 * 0.017) * (100 / max(1, int(cur_fps)))
-                player.ang = (player.ang / 0.017) % 360 * 0.017
+                player.givekf(m1, m2, k, k2, k3)
             screen.fill((0, 0, 0))
             camera.update(player)
             for sprite in all_sprites:
@@ -544,4 +578,4 @@ class MainGame:
 
 
 if __name__ == '__main__':
-    MainGame(1000, 1000)
+    MainGame(1040, 780, [1], 0)
