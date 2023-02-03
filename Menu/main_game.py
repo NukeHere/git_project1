@@ -82,12 +82,12 @@ class AI:
                 i += 1
             return l[::-1]
 
-        if timer >= self.tm or self.i == len(self.path) - 1:
+        if timer >= self.tm or self.i == len(self.path) - 1 and self.bd.hp > 0:
             self.path = bfs()
             self.tm = timer + min(3, len(self.path) // 4)
             self.i = 0
 
-        if timer >= self.tm2:
+        if timer >= self.tm2 and self.bd.hp > 0:
             self.gun.fire()
             self.tm2 = timer + 0.5 * random.randint(2, 14)
 
@@ -550,7 +550,7 @@ class MainGame:
         GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
         GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
         tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 16, 100, 3)
-        tank2 = BaseTank(1000, 1000, 0, 'tank_body.png', 'B', 16, 100, 3)
+        tank2 = BaseTank(1200, 1000, 0, 'tank_body.png', 'B', 16, 100, 3)
         tank3 = BaseTank(1500, 1500, 0, 'tank_body.png', 'B', 16, 100, 3)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
