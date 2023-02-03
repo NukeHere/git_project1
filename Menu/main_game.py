@@ -31,13 +31,11 @@ class AI:
     def update(self):
         def bfs():
             plcoords = (player.rect.x - delta.rect.x) // 50 + (player.rect.y - delta.rect.y) // 50 * 40
-            # print(plcoords)
             d = deque()
             cur2 = (self.bd.rect.x - delta.rect.x) // 50 + (self.bd.rect.y - delta.rect.y) // 50 * 40
             if cur2 < 0:
                 return [plcoords]
             cur = cur2 + 1 - 1
-            # print(cur)
             self.mp1 = self.mp[:]
             self.mp1[cur][0] = 1
             if 2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0:
@@ -66,14 +64,19 @@ class AI:
                     d.append(cur + 40)
                     self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
                 cur = d.popleft()
-            l = [plcoords]
+            l = []
+            if plcoords not in [i for i in range(80)] + [i for i in range(1559, 1600)] + [i for i in range(0, 1600, 40)] +\
+                        [i + 40 for i in range(0, 1600, 40)]:
+                l = [plcoords]
             cur = plcoords
             i = 0
             while cur != cur2 and i < 2000:
-                # print(cur)
                 cur = self.mp1[cur][1]
-                l.append(cur)
+                if cur not in [i for i in range(40)] + [i for i in range(1559, 1600)] + [i for i in range(0, 1600, 40)] +\
+                        [i + 39 for i in range(0, 1600, 40)]:
+                    l.append(cur)
                 i += 1
+            print(l)
             return l[::-1]
 
         if timer >= self.tm or self.i == len(self.path) - 1:
@@ -91,7 +94,9 @@ class GameObj(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (w, h))
         if col:
             self.rect = self.image.get_rect()
+            self.mask = pygame.mask.from_surface(self.image)
             self.colmp = col_map
+            self.add(statick)
         else:
             self.rect = pygame.Rect(0, 0, 0, 0)
         self.rect.x, self.rect.y = x, y
@@ -250,6 +255,8 @@ class Aim(pygame.sprite.Sprite):
         self.image = load_image('null.png')
         self.ai = ai
         self.tm = 0
+        self.image = load_image('nlo.jpg')
+        self.image = pygame.transform.scale(self.image, (10, 10))
 
     def update(self):
         if self.aimode and self.aim:
@@ -392,6 +399,21 @@ class BaseTank(pygame.sprite.Sprite):
                         pygame.sprite.collide_mask(self, sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
+        for sprite in statick:
+            if pygame.sprite.collide_mask(self, sprite):
+                self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
+                self.crspeed = 0
+                if self != player:
+                    self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang), -self.maxspeed * math.sin(self.ang))
+                    if pygame.sprite.collide_mask(self, sprite):
+                        self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
+                                                   self.maxspeed * math.sin(self.ang))
+                        self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
+                                                   self.maxspeed * math.sin(self.ang))
+                        if pygame.sprite.collide_mask(self, sprite):
+                            self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
+                                                       -self.maxspeed * math.sin(self.ang))
+
         if self.aim:
             kk = math.atan(
                 (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
@@ -473,7 +495,7 @@ class BaseTank(pygame.sprite.Sprite):
 
 class MainGame:
     def __init__(self, w, h, maap, spr):
-        global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta
+        global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta, statick
         VOLUEME_M, VOLUEME_Z = 1, 1
         timer = 0
         pygame.init()
@@ -489,14 +511,25 @@ class MainGame:
         b_team = pygame.sprite.Group()
         barriers = pygame.sprite.Group()
         all_sprites = pygame.sprite.Group()
+        statick = pygame.sprite.Group()
         clock = pygame.time.Clock()
         if maap:
             maap = [GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
-                    GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500)]
+                    GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500),
+                    GameObj('болото.png', 1000, 0, 500, 500), GameObj('болото.png', 1000, 500, 500, 500),
+                    GameObj('болото.png', 1500, 0, 500, 500), GameObj('болото.png', 1500, 500, 500, 500),
+                    GameObj('болото.png', 0, 2000, 500, 500), GameObj('болото.png', 0, 2500, 500, 500),
+                    GameObj('болото.png', 500, 2000, 500, 500), GameObj('болото.png', 500, 2500, 500, 500),
+                    GameObj('болото.png', 1000, 2000, 500, 500), GameObj('болото.png', 1000, 2500, 500, 500),
+                    GameObj('болото.png', 1500, 2000, 500, 500), GameObj('болото.png', 1500, 2500, 500, 500)]
         delta = GameObj('null.png', 0, 0, 1, 1)
-        tank1 = BaseTank(0, 0, 0, 'tank_body.png', 'A', 16, 100, 3)
-        tank2 = BaseTank(500, 500, 0, 'tank_body.png', 'B', 16, 100, 3)
-        tank3 = BaseTank(1000, 1000, 0, 'tank_body.png', 'B', 16, 100, 3)
+        GameObj('пустыня.png', 0, -100, 2000, 100, col=True)
+        GameObj('пустыня.png', -100, 0, 100, 2000, col=True)
+        GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
+        GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
+        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 16, 100, 3)
+        tank2 = BaseTank(600, 600, 0, 'tank_body.png', 'B', 16, 100, 3)
+        tank3 = BaseTank(400, 400, 0, 'tank_body.png', 'B', 16, 100, 3)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 8, 0)
@@ -506,8 +539,8 @@ class MainGame:
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True, aim=True)
         ai4 = Aim("B", is_ai=True, aim=True)
-        ai3 = Aim('b', is_ai=True, aim=False)
-        ai5 = Aim('b', is_ai=True, aim=False)
+        ai3 = Aim('B', is_ai=True, aim=False)
+        ai5 = Aim('B', is_ai=True, aim=False)
         tank2.aim = ai3
         tank3.aim = ai5
         gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
