@@ -76,7 +76,6 @@ class AI:
                         [i + 39 for i in range(0, 1600, 40)]:
                     l.append(cur)
                 i += 1
-            print(l)
             return l[::-1]
 
         if timer >= self.tm or self.i == len(self.path) - 1:
@@ -470,7 +469,7 @@ class BaseTank(pygame.sprite.Sprite):
         else:
             self.maxspeed = 3
             if self.m1 and abs(self.crspeed) < self.maxspeed:
-                self.crspeed += 0.002 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
+                self.crspeed += 0.003 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
             else:
                 if abs(self.crspeed) < 1:
                     self.crspeed = 0
@@ -513,15 +512,21 @@ class MainGame:
         all_sprites = pygame.sprite.Group()
         statick = pygame.sprite.Group()
         clock = pygame.time.Clock()
-        if maap:
-            maap = [GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
-                    GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500),
-                    GameObj('болото.png', 1000, 0, 500, 500), GameObj('болото.png', 1000, 500, 500, 500),
-                    GameObj('болото.png', 1500, 0, 500, 500), GameObj('болото.png', 1500, 500, 500, 500),
-                    GameObj('болото.png', 0, 2000, 500, 500), GameObj('болото.png', 0, 2500, 500, 500),
-                    GameObj('болото.png', 500, 2000, 500, 500), GameObj('болото.png', 500, 2500, 500, 500),
-                    GameObj('болото.png', 1000, 2000, 500, 500), GameObj('болото.png', 1000, 2500, 500, 500),
-                    GameObj('болото.png', 1500, 2000, 500, 500), GameObj('болото.png', 1500, 2500, 500, 500)]
+        maap2 = []
+        maap = list(maap)[1:]
+        print(maap)
+        for i in maap:
+            maap2.append(GameObj('big_rock.png', int(i[1]), int(i[2]),
+                                 int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50))
+        maap = maap2
+        """[GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
+                GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500),
+                GameObj('болото.png', 1000, 0, 500, 500), GameObj('болото.png', 1000, 500, 500, 500),
+                GameObj('болото.png', 1500, 0, 500, 500), GameObj('болото.png', 1500, 500, 500, 500),
+                GameObj('болото.png', 0, 2000, 500, 500), GameObj('болото.png', 0, 2500, 500, 500),
+                GameObj('болото.png', 500, 2000, 500, 500), GameObj('болото.png', 500, 2500, 500, 500),
+                GameObj('болото.png', 1000, 2000, 500, 500), GameObj('болото.png', 1000, 2500, 500, 500),
+                GameObj('болото.png', 1500, 2000, 500, 500), GameObj('болото.png', 1500, 2500, 500, 500)]"""
         delta = GameObj('null.png', 0, 0, 1, 1)
         GameObj('пустыня.png', 0, -100, 2000, 100, col=True)
         GameObj('пустыня.png', -100, 0, 100, 2000, col=True)
@@ -561,6 +566,8 @@ class MainGame:
         sound_battle.play(-1)
         t = Textrender(screen, screen_resolution=w / 800)
         while running:
+            print(player.rect.x - delta.rect.x, player.rect.y - delta.rect.y)
+            ai12.update()
             ai11.update()
             cur_fps = clock.get_fps()
             timer += 0.01
@@ -597,7 +604,7 @@ class MainGame:
                     gun1.fire()
                     sound_fire.play(0)
                 player.givekf(m1, m2, k, k2, k3)
-            screen.fill((0, 0, 0))
+            screen.fill((100, 100, 100))
             camera.update(player)
             for sprite in all_sprites:
                 camera.apply(sprite)
