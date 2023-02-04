@@ -87,6 +87,7 @@ if __name__ == '__main__':
                         sound1.play(0)
                         q = vibor_kart(screen, SCREEN_RESOLATION)
                 elif (q.type() == 'Vibor Kart'):
+                    sounds = [VOLUEME_M, VOLUEME_Z]
                     if (pos_knopok[0][0] <= event.pos[0] <= pos_knopok[0][2]
                             and pos_knopok[0][1] <= event.pos[1] <= pos_knopok[0][3]):
                         sound1.set_volume(VOLUEME_Z)
@@ -97,7 +98,7 @@ if __name__ == '__main__':
                         sprite.rect = sprite.image.get_rect()
                         csvfile = open('data/Болото.csv', encoding="utf8")
                         listr = csv.reader(csvfile, delimiter=',', quotechar='"')
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite)
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite, sounds)
                         csvfile.close()
                         sound_main.set_volume(VOLUEME_M)
                         sound_main.play(-1)
@@ -111,7 +112,7 @@ if __name__ == '__main__':
                         csvfile = open('data/Болото.csv', encoding="utf8")
                         listr = csv.reader(csvfile, delimiter=',', quotechar='"')
                         sprite.rect = sprite.image.get_rect()
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite)
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite, sounds)
                         csvfile.close()
                         sound_main.set_volume(VOLUEME_M)
                         sound_main.play(-1)
@@ -125,7 +126,7 @@ if __name__ == '__main__':
                         sprite.rect = sprite.image.get_rect()
                         csvfile = open('data/Болото.csv', encoding="utf8")
                         listr = csv.reader(csvfile, delimiter=',', quotechar='"')
-                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite)
+                        w = MainGame(800 * SCREEN_RESOLATION, 600 * SCREEN_RESOLATION, listr, sprite, sounds)
                         csvfile.close()
                         sound_main.set_volume(VOLUEME_M)
                         sound_main.play(-1)

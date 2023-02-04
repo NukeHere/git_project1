@@ -6,9 +6,6 @@ import random
 from collections import deque
 
 
-# from main import VOLUEME_M, VOLUEME_Z
-
-
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -82,14 +79,15 @@ class AI:
                 i += 1
             return l[::-1]
 
-        if timer >= self.tm or self.i == len(self.path) - 1 and self.bd.hp > 0:
+        if timer >= self.tm or self.i == len(self.path) - 1 and self.bd.xp > 0:
             self.path = bfs()
             self.tm = timer + min(3, len(self.path) // 4)
             self.i = 0
 
-        if timer >= self.tm2 and self.bd.hp > 0:
+        if timer >= self.tm2 and self.bd.xp > 0:
             self.gun.fire()
-            self.tm2 = timer + 0.5 * random.randint(2, 14)
+            self.tm2 = timer + max(5, (((player.rect.x - self.bd.rect.x) ** 2 +
+                                        (player.rect.y - self.bd.rect.y) ** 2) ** 0.5) / 600 * 5)
 
 
 class GameObj(pygame.sprite.Sprite):
@@ -228,6 +226,8 @@ class Ammo(pygame.sprite.Sprite):
                         sprite.xpd(max(self.bs_dmg // 2 - sprite.armour, 0))
                     if sprite.name == 'tonk':
                         sprite.xpd(max(self.bs_dmg - sprite.armour, 0))
+                        if sprite.xp > 0:
+                            random.choice((sound_probitie, sound_probitie2)).play(0)
                         self.image = load_image('null.png')
                         self.crspeed = 0
                         self.remove(a_team)
@@ -239,12 +239,15 @@ class Ammo(pygame.sprite.Sprite):
                         sprite.xpd(max(self.bs_dmg // 2 - sprite.armour, 0))
                     if sprite.name == 'tonk':
                         sprite.xpd(max(self.bs_dmg - sprite.armour, 0))
+                        if sprite.xp > 0:
+                            random.choice((sound_pr1, sound_pr2, sound_pr3)).play(0)
                         self.image = load_image('null.png')
                         self.crspeed = 0
                         self.remove(b_team)
                         self.remove(all_sprites)
         for sprite in statick:
             if pygame.sprite.collide_mask(self, sprite):
+                sound_fire_exp.play(0)
                 self.image = load_image('null.png')
                 self.crspeed = 0
                 self.remove(b_team)
@@ -268,8 +271,6 @@ class Aim(pygame.sprite.Sprite):
         self.image = load_image('null.png')
         self.ai = ai
         self.tm = 0
-        self.image = load_image('nlo.jpg')
-        self.image = pygame.transform.scale(self.image, (10, 10))
 
     def update(self):
         if self.aimode and self.aim:
@@ -304,52 +305,53 @@ class TankGun(pygame.sprite.Sprite):
         self.armour = armour
 
     def update(self):
-        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
-        self.rect = self.image.get_rect(center=self.rect.center)
-        self.rect.center = self.body.rect.center
-        self.mask = pygame.mask.from_surface(self.image)
-        kk = math.atan(
-            (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
-        if self.aim.rect.y < self.rect.center[1]:
-            if self.aim.rect.x > self.rect.center[0]:
-                kk = -(90 * 0.017 + kk)
-            else:
-                kk = -90 * 0.017 - kk
-        else:
-            kk = 90 * 0.017 - kk
-        if self.ang > 180 * 0.017:
-            self.ang = -180 * 0.017
-        elif self.ang < -180 * 0.017:
-            self.ang = 180 * 0.017
-        if self.ang != kk:
-            e1 = 0
-            e2 = 0
-            if self.ang > 0:
-                if kk > 0:
-                    e1 = -self.ang + kk if kk > self.ang else 3.06 - self.ang + kk + 3.06
-                    e2 = self.ang - kk if self.ang > kk else 3.06 - self.ang + kk + 3.06
+        if self.body.xp > 0:
+            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+            self.rect = self.image.get_rect(center=self.rect.center)
+            self.rect.center = self.body.rect.center
+            self.mask = pygame.mask.from_surface(self.image)
+            kk = math.atan(
+                (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
+            if self.aim.rect.y < self.rect.center[1]:
+                if self.aim.rect.x > self.rect.center[0]:
+                    kk = -(90 * 0.017 + kk)
                 else:
-                    e1 = 3.06 - self.ang - kk
-                    e2 = self.ang - kk
+                    kk = -90 * 0.017 - kk
             else:
-                if kk > 0:
-                    e1 += -self.ang + kk
-                    e2 += 3.06 + self.ang + 3.06 - self.ang
+                kk = 90 * 0.017 - kk
+            if self.ang > 180 * 0.017:
+                self.ang = -180 * 0.017
+            elif self.ang < -180 * 0.017:
+                self.ang = 180 * 0.017
+            if self.ang != kk:
+                e1 = 0
+                e2 = 0
+                if self.ang > 0:
+                    if kk > 0:
+                        e1 = -self.ang + kk if kk > self.ang else 3.06 - self.ang + kk + 3.06
+                        e2 = self.ang - kk if self.ang > kk else 3.06 - self.ang + kk + 3.06
+                    else:
+                        e1 = 3.06 - self.ang - kk
+                        e2 = self.ang - kk
                 else:
-                    e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
-                    e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
-            if abs(self.ang - kk) <= 0.017:
-                self.ang = kk
-            elif e1 <= e2:
-                # self.ang < kk or
-                self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
-            else:
-                self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
-            # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
+                    if kk > 0:
+                        e1 += -self.ang + kk
+                        e2 += 3.06 + self.ang + 3.06 - self.ang
+                    else:
+                        e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
+                        e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
+                if abs(self.ang - kk) <= 0.017:
+                    self.ang = kk
+                elif e1 <= e2:
+                    # self.ang < kk or
+                    self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
+                else:
+                    self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
+                # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
     def fire(self):
         sound_fire.play(0)
-        Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10)
+        Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10, bs_dmg=30)
 
     def xpd(self, dmg):
         self.body.xp -= dmg
@@ -390,114 +392,135 @@ class BaseTank(pygame.sprite.Sprite):
 
     def update(self):
         k = 1
-        if self.repd:
-            self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
-                                       self.crspeed * math.sin(self.ang))
-        else:
-            self.crspeed = 0
-            k = 0.4
-        self.mask = pygame.mask.from_surface(self.image)
-        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
-        self.rect = self.image.get_rect(center=self.rect.center)
-        if self.team == "A":
-            for sprite in b_team:
-                if pygame.sprite.spritecollideany(self, b_team) and \
-                        pygame.sprite.spritecollideany(self, b_team).name == 'tonk' and \
-                        pygame.sprite.collide_mask(self, sprite):
-                    self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
-                    self.crspeed = 0
-        if self.team == "B":
-            for sprite in a_team:
-                if pygame.sprite.spritecollideany(self, a_team) and \
-                        pygame.sprite.spritecollideany(self, a_team).name == 'tonk' and \
-                        pygame.sprite.collide_mask(self, sprite):
-                    self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
-                    self.crspeed = 0
-        for sprite in statick:
-            if pygame.sprite.collide_mask(self, sprite):
-                self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
+        if self.xp > 0:
+            if self.repd:
+                self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
+                                           self.crspeed * math.sin(self.ang))
+            else:
                 self.crspeed = 0
-                if self != player:
-                    self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang), -self.maxspeed * math.sin(self.ang))
-                    if pygame.sprite.collide_mask(self, sprite):
-                        self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
-                                                   self.maxspeed * math.sin(self.ang))
-                        self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
-                                                   self.maxspeed * math.sin(self.ang))
+                k = 0.4
+            self.mask = pygame.mask.from_surface(self.image)
+            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+            self.rect = self.image.get_rect(center=self.rect.center)
+            if self.team == "A":
+                for sprite in b_team:
+                    if pygame.sprite.spritecollideany(self, b_team) and \
+                            pygame.sprite.spritecollideany(self, b_team).name == 'tonk' and \
+                            pygame.sprite.collide_mask(self, sprite):
+                        self.rect = self.rect.move(-self.crspeed * math.cos(self.ang),
+                                                   -self.crspeed * math.sin(self.ang))
+                        self.crspeed = 0
+            if self.team == "B":
+                for sprite in a_team:
+                    if pygame.sprite.spritecollideany(self, a_team) and \
+                            pygame.sprite.spritecollideany(self, a_team).name == 'tonk' and \
+                            pygame.sprite.collide_mask(self, sprite):
+                        self.rect = self.rect.move(-self.crspeed * math.cos(self.ang),
+                                                   -self.crspeed * math.sin(self.ang))
+                        self.crspeed = 0
+            for sprite in statick:
+                if pygame.sprite.collide_mask(self, sprite):
+                    self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
+                    self.crspeed = 0
+                    if self != player:
+                        self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
+                                                   -self.maxspeed * math.sin(self.ang))
                         if pygame.sprite.collide_mask(self, sprite):
-                            self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
-                                                       -self.maxspeed * math.sin(self.ang))
+                            self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
+                                                       self.maxspeed * math.sin(self.ang))
+                            self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
+                                                       self.maxspeed * math.sin(self.ang))
+                            if pygame.sprite.collide_mask(self, sprite):
+                                self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
+                                                           -self.maxspeed * math.sin(self.ang))
 
-        if self.aim:
-            kk = math.atan(
-                (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
-            if self.aim.rect.y < self.rect.center[1]:
-                if self.aim.rect.x > self.rect.center[0]:
-                    kk = -(90 * 0.017 + kk)
-                else:
-                    kk = -90 * 0.017 - kk
-            else:
-                kk = 90 * 0.017 - kk
-            if self.ang > 180 * 0.017:
-                self.ang = -180 * 0.017
-            elif self.ang < -180 * 0.017:
-                self.ang = 180 * 0.017
-            if self.ang != kk:
-                e1 = 0
-                e2 = 0
-                if self.ang > 0:
-                    if kk > 0:
-                        e1 = -self.ang + kk if kk > self.ang else 3.06 - self.ang + kk + 3.06
-                        e2 = self.ang - kk if self.ang > kk else 3.06 - self.ang + kk + 3.06
+            if self.aim:
+                kk = math.atan(
+                    (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
+                if self.aim.rect.y < self.rect.center[1]:
+                    if self.aim.rect.x > self.rect.center[0]:
+                        kk = -(90 * 0.017 + kk)
                     else:
-                        e1 = 3.06 - self.ang - kk
-                        e2 = self.ang - kk
+                        kk = -90 * 0.017 - kk
                 else:
-                    if kk > 0:
-                        e1 += -self.ang + kk
-                        e2 += 3.06 + self.ang + 3.06 - self.ang
+                    kk = 90 * 0.017 - kk
+                if self.ang > 180 * 0.017:
+                    self.ang = -180 * 0.017
+                elif self.ang < -180 * 0.017:
+                    self.ang = 180 * 0.017
+                if self.ang != kk:
+                    e1 = 0
+                    e2 = 0
+                    if self.ang > 0:
+                        if kk > 0:
+                            e1 = -self.ang + kk if kk > self.ang else 3.06 - self.ang + kk + 3.06
+                            e2 = self.ang - kk if self.ang > kk else 3.06 - self.ang + kk + 3.06
+                        else:
+                            e1 = 3.06 - self.ang - kk
+                            e2 = self.ang - kk
                     else:
-                        e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
-                        e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
-                if abs(self.ang - kk) <= 0.017:
-                    self.ang = kk
-                elif e1 <= e2:
-                    # self.ang < kk or
-                    self.ang += 0.017 * k * (100 / max(1, int(cur_fps)))
+                        if kk > 0:
+                            e1 += -self.ang + kk
+                            e2 += 3.06 + self.ang + 3.06 - self.ang
+                        else:
+                            e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
+                            e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
+                    if abs(self.ang - kk) <= 0.017:
+                        self.ang = kk
+                    elif e1 <= e2:
+                        # self.ang < kk or
+                        self.ang += 0.017 * k * (100 / max(1, int(cur_fps)))
+                    else:
+                        self.ang -= 0.017 * k * (100 / max(1, int(cur_fps)))
+                if (self.rect.center[0] - delta.rect.x + 1) // 50 + (
+                        self.rect.center[1] - delta.rect.y + 1) // 50 * 40 != \
+                        (self.aim.rect.x - delta.rect.x + 1) // 50 + (self.aim.rect.y - delta.rect.y + 1) // 50 * 40:
+                    if abs(self.ang - kk) <= 0.017 * k and self.crspeed < self.maxspeed:
+                        if self.crspeed < 1:
+                            self.crspeed = 1
+                        self.crspeed += 0.012 * (100 / max(1, int(cur_fps)))
+                    elif self.crspeed > 0.006:
+                        self.crspeed -= 0.006 / k * (100 / max(1, int(cur_fps)))
                 else:
-                    self.ang -= 0.017 * k * (100 / max(1, int(cur_fps)))
-            if (self.rect.center[0] - delta.rect.x + 1) // 50 + (self.rect.center[1] - delta.rect.y + 1) // 50 * 40 != \
-                    (self.aim.rect.x - delta.rect.x + 1) // 50 + (self.aim.rect.y - delta.rect.y + 1) // 50 * 40:
-                if abs(self.ang - kk) <= 0.017 * k and self.crspeed < self.maxspeed:
-                    if self.crspeed < 1:
-                        self.crspeed = 1
-                    self.crspeed += 0.012 * (100 / max(1, int(cur_fps)))
-                elif self.crspeed > 0.006:
-                    self.crspeed -= 0.006 / k * (100 / max(1, int(cur_fps)))
+                    if self.crspeed > 0.02:
+                        self.crspeed -= 0.012 / k * (100 / max(1, int(cur_fps)))
+                    else:
+                        self.crspeed = 0
+                    if self.aim.ai.i < len(self.aim.ai.path) - 1:
+                        self.aim.ai.i += 1
             else:
-                if self.crspeed > 0.02:
-                    self.crspeed -= 0.012 / k * (100 / max(1, int(cur_fps)))
+                self.maxspeed = 3
+                if self.m1 and abs(self.crspeed) < self.maxspeed:
+                    self.crspeed += 0.003 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
                 else:
-                    self.crspeed = 0
-                if self.aim.ai.i < len(self.aim.ai.path) - 1:
-                    self.aim.ai.i += 1
-        else:
-            self.maxspeed = 3
-            if self.m1 and abs(self.crspeed) < self.maxspeed:
-                self.crspeed += 0.003 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
-            else:
-                if abs(self.crspeed) < 1:
-                    self.crspeed = 0
-                elif self.crspeed > 0:
-                    self.crspeed -= 0.018 * (100 / max(1, int(cur_fps)))
-                elif self.crspeed < 0:
-                    self.crspeed += 0.018 * (100 / max(1, int(cur_fps)))
-            if self.m2:
-                self.ang += (0.6 * self.k3 * 0.017) * (100 / max(1, int(cur_fps))) * k
-                self.ang = (self.ang / 0.017) % 360 * 0.017
+                    if abs(self.crspeed) < 1:
+                        self.crspeed = 0
+                    elif self.crspeed > 0:
+                        self.crspeed -= 0.018 * (100 / max(1, int(cur_fps)))
+                    elif self.crspeed < 0:
+                        self.crspeed += 0.018 * (100 / max(1, int(cur_fps)))
+                if self.m2:
+                    self.ang += (0.6 * self.k3 * 0.017) * (100 / max(1, int(cur_fps))) * k
+                    self.ang = (self.ang / 0.017) % 360 * 0.017
+        elif self.xp < 0:
+            self.xp = 0
 
     def xpd(self, dmg):
-        self.xp -= dmg
+        if self.xp > 0:
+            self.xp -= dmg
+            if self.xp <= 0:
+                if self.team == "A":
+                    self.remove(a_team)
+                    sound_1 = pygame.mixer.Sound(os.path.join('data', 'tank-destr.mp3'))
+                    sound_1.play(0)
+                else:
+                    self.remove(b_team)
+                    sound_1 = pygame.mixer.Sound(os.path.join('data', 'wot_bigboom_far.mp3'))
+                    sound_1.play(0)
+                self.add(statick)
+                self.image = load_image('tank_body2.png')
+                self.image = pygame.transform.scale(self.image, (67, 31))
+                self.image = pygame.transform.rotate(self.image, -(self.ang / 0.017))
 
     def givekf(self, m1, m2, k, k2, k3):
         self.m1 = m1
@@ -508,17 +531,25 @@ class BaseTank(pygame.sprite.Sprite):
 
 
 class MainGame:
-    def __init__(self, w, h, maap, spr):
+    def __init__(self, w, h, maap, spr, so):
         global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta, statick, \
-            sound_fire
-        VOLUEME_M, VOLUEME_Z = 1, 1
+            sound_fire, sound_fire_exp, sound_probitie, sound_pr1, sound_pr2, sound_pr3, sound_probitie2
         timer = 0
         pygame.init()
         size = width, height = w, h
+        VOLUEME_M, VOLUEME_Z = so
         sound_battle = pygame.mixer.Sound(os.path.join('data',
                                                        'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva - Mountain Pass (Battle).mp3'))
         sound_fire = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
+        sound_pr1 = pygame.mixer.Sound(os.path.join('data', '1.mp3'))
+        sound_pr2 = pygame.mixer.Sound(os.path.join('data', '2.mp3'))
+        sound_pr3 = pygame.mixer.Sound(os.path.join('data', '4.mp3'))
+        sound_probitie = pygame.mixer.Sound(os.path.join('data', 'probitie1.mp3'))
+        sound_probitie2 = pygame.mixer.Sound(os.path.join('data', 'probitie-2.mp3'))
+        sound_fire_exp = pygame.mixer.Sound(os.path.join('data', 'взрыв.mp3'))
+        sound_probitie.set_volume(VOLUEME_Z)
         sound_fire.set_volume(VOLUEME_Z)
+        sound_fire_exp.set_volume(VOLUEME_Z)
         sound_battle.set_volume(VOLUEME_M)
         screen = pygame.display.set_mode(size)
         aims = pygame.sprite.Group()
@@ -531,10 +562,18 @@ class MainGame:
         maap2 = []
         maap = list(maap)[1:]
         print(maap)
+        maapai = [[i, 0] for i in range(1600)]
         for i in maap:
-            maap2.append(GameObj(i[0], int(i[1]), int(i[2]),
+            ls = i[0].split(':')
+            if ls[0] == 'random':
+                ls = random.choice(ls[1:])
+            maap2.append(GameObj(ls, int(i[1]), int(i[2]),
                                  int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50,
                                  col=True, col_map=[i[3].split('x')[0], i[3].split('x')[1]]))
+            coords = int(i[1]) // 50 + int(i[2]) // 50 * 40
+            for y in range(int(i[3].split('x')[1])):
+                for x in range(int(i[3].split('x')[0])):
+                    maapai[coords + y * 40 + x] = [2500, 0]
         maap = maap2
         """[GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
                 GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500),
@@ -569,8 +608,8 @@ class MainGame:
         gun2 = TankGun('gun1.png', "B", tank2, ai2, 8)
         gun3 = TankGun('gun1.png', "B", tank3, ai4, 8)
         camera = Camera()
-        ai11 = AI([[i, 0] for i in range(1600)], ai3, gun2, tank2)
-        ai12 = AI([[i, 0] for i in range(1600)], ai5, gun3, tank3)
+        ai11 = AI(maapai, ai3, gun2, tank2)
+        ai12 = AI(maapai, ai5, gun3, tank3)
         ai3.ai = ai11
         ai5.ai = ai12
         running = True
@@ -582,6 +621,7 @@ class MainGame:
         mousepos = (0, 0)
         sound_battle.play(-1)
         t = Textrender(screen, screen_resolution=w / 800)
+        tmf = 0
         while running:
             print(tank2.xp, tank3.xp)
             ai12.update()
@@ -618,8 +658,9 @@ class MainGame:
                         m2 = False
                 if event.type == pygame.MOUSEMOTION:
                     mousepos = event.pos
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN and tmf <= timer:
                     gun1.fire()
+                    tmf = timer + 3
                 player.givekf(m1, m2, k, k2, k3)
             screen.fill((100, 100, 100))
             camera.update(player)
