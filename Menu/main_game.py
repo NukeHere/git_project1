@@ -124,7 +124,7 @@ class Textrender:
         txt = q.render('Твои XP: ' + str(player.xp), True, (255, 255, 255))
         self.screen.blit(txt, (15 * self.screen_resolution,
                                565 * self.screen_resolution))
-        txt = q.render('XP врага: ' + str(cur_fps), True, (255, 255, 255))
+        txt = q.render('XP врага: ' + str(cr_xp[0]), True, (255, 255, 255))
         self.screen.blit(txt, (650 * self.screen_resolution,
                                565 * self.screen_resolution))
 
@@ -226,6 +226,7 @@ class Ammo(pygame.sprite.Sprite):
                         sprite.xpd(max(self.bs_dmg // 2 - sprite.armour, 0))
                     if sprite.name == 'tonk':
                         sprite.xpd(max(self.bs_dmg - sprite.armour, 0))
+                        cr_xp[0] = sprite.xp
                         if sprite.xp > 0:
                             random.choice((sound_probitie, sound_probitie2)).play(0)
                         self.image = load_image('null.png')
@@ -247,6 +248,8 @@ class Ammo(pygame.sprite.Sprite):
                         self.remove(all_sprites)
         for sprite in statick:
             if pygame.sprite.collide_mask(self, sprite):
+                sound_fire_exp.set_volume(VOLUEME_Z / (((player.rect.x - self.rect.x) ** 2 +
+                                                    (player.rect.y - self.rect.y) ** 2) ** 0.5) * 400)
                 sound_fire_exp.play(0)
                 self.image = load_image('null.png')
                 self.crspeed = 0
@@ -350,6 +353,11 @@ class TankGun(pygame.sprite.Sprite):
                 # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
     def fire(self):
+        if self.team == "A":
+            sound_fire.set_volume(VOLUEME_Z)
+        else:
+            sound_fire.set_volume(VOLUEME_Z / (((player.rect.x - self.body.rect.x) ** 2 +
+                                                (player.rect.y - self.body.rect.y) ** 2) ** 0.5) * 400)
         sound_fire.play(0)
         Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10, bs_dmg=30)
 
@@ -422,7 +430,7 @@ class BaseTank(pygame.sprite.Sprite):
                 if pygame.sprite.collide_mask(self, sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
-                    if self != player:
+                    if self.aim:
                         self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                    -self.maxspeed * math.sin(self.ang))
                         if pygame.sprite.collide_mask(self, sprite):
@@ -433,6 +441,7 @@ class BaseTank(pygame.sprite.Sprite):
                             if pygame.sprite.collide_mask(self, sprite):
                                 self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                            -self.maxspeed * math.sin(self.ang))
+                        self.crspeed = -2
 
             if self.aim:
                 kk = math.atan(
@@ -533,7 +542,8 @@ class BaseTank(pygame.sprite.Sprite):
 class MainGame:
     def __init__(self, w, h, maap, spr, so):
         global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta, statick, \
-            sound_fire, sound_fire_exp, sound_probitie, sound_pr1, sound_pr2, sound_pr3, sound_probitie2
+            sound_fire, sound_fire_exp, sound_probitie, sound_pr1, sound_pr2, sound_pr3, sound_probitie2, VOLUEME_M, \
+            VOLUEME_Z, cr_xp
         timer = 0
         pygame.init()
         size = width, height = w, h
@@ -561,20 +571,7 @@ class MainGame:
         clock = pygame.time.Clock()
         maap2 = []
         maap = list(maap)[1:]
-        print(maap)
         maapai = [[i, 0] for i in range(1600)]
-        for i in maap:
-            ls = i[0].split(':')
-            if ls[0] == 'random':
-                ls = random.choice(ls[1:])
-            maap2.append(GameObj(ls, int(i[1]), int(i[2]),
-                                 int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50,
-                                 col=True, col_map=[i[3].split('x')[0], i[3].split('x')[1]]))
-            coords = int(i[1]) // 50 + int(i[2]) // 50 * 40
-            for y in range(int(i[3].split('x')[1])):
-                for x in range(int(i[3].split('x')[0])):
-                    maapai[coords + y * 40 + x] = [2500, 0]
-        maap = maap2
         """[GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
                 GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500),
                 GameObj('болото.png', 1000, 0, 500, 500), GameObj('болото.png', 1000, 500, 500, 500),
@@ -588,15 +585,15 @@ class MainGame:
         GameObj('пустыня.png', -100, 0, 100, 2000, col=True)
         GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
         GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
-        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 16, 100, 3)
-        tank2 = BaseTank(1200, 1000, 0, 'tank_body.png', 'B', 16, 100, 3)
-        tank3 = BaseTank(1500, 1500, 0, 'tank_body.png', 'B', 16, 100, 3)
-        track11 = Track('track1.png', 'track2.png', "A", tank1, 8, 0)
-        track12 = Track('track1.png', 'track2.png', "A", tank1, 8, 180)
-        track21 = Track('track1.png', 'track2.png', "B", tank2, 8, 0)
-        track22 = Track('track1.png', 'track2.png', "B", tank2, 8, 180)
-        track31 = Track('track1.png', 'track2.png', "B", tank3, 8, 0)
-        track32 = Track('track1.png', 'track2.png', "B", tank3, 8, 180)
+        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 18, 100, 3)
+        tank2 = BaseTank(1200, 1000, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank3 = BaseTank(1500, 1500, 0, 'tank_body.png', 'B', 18, 100, 3)
+        track11 = Track('track1.png', 'track2.png', "A", tank1, 10, 0)
+        track12 = Track('track1.png', 'track2.png', "A", tank1, 10, 180)
+        track21 = Track('track1.png', 'track2.png', "B", tank2, 10, 0)
+        track22 = Track('track1.png', 'track2.png', "B", tank2, 10, 180)
+        track31 = Track('track1.png', 'track2.png', "B", tank3, 10, 0)
+        track32 = Track('track1.png', 'track2.png', "B", tank3, 10, 180)
         ai1 = Aim("A")
         ai2 = Aim("B", is_ai=True, aim=True)
         ai4 = Aim("B", is_ai=True, aim=True)
@@ -607,6 +604,22 @@ class MainGame:
         gun1 = TankGun('gun1.png', "A", tank1, ai1, 8)
         gun2 = TankGun('gun1.png', "B", tank2, ai2, 8)
         gun3 = TankGun('gun1.png', "B", tank3, ai4, 8)
+        cr_xp = [tank2.xp]
+        for i in maap:
+            ls = i[0].split(':')
+            if ls[0] == 'random':
+                ls = random.choice(ls[1:])
+            if i[4] == '1':
+                maap2.append(GameObj(ls, int(i[1]), int(i[2]),
+                                 int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50,
+                                 col=True, col_map=[i[3].split('x')[0], i[3].split('x')[1]]))
+                coords = int(i[1]) // 50 + int(i[2]) // 50 * 40
+                for y in range(int(i[3].split('x')[1])):
+                    for x in range(int(i[3].split('x')[0])):
+                        maapai[coords + y * 40 + x] = [2500, 0]
+            else:
+                maap2.append(GameObj(ls, int(i[1]), int(i[2]),
+                                     int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50, col=False))
         camera = Camera()
         ai11 = AI(maapai, ai3, gun2, tank2)
         ai12 = AI(maapai, ai5, gun3, tank3)
@@ -623,7 +636,6 @@ class MainGame:
         t = Textrender(screen, screen_resolution=w / 800)
         tmf = 0
         while running:
-            print(tank2.xp, tank3.xp)
             ai12.update()
             ai11.update()
             cur_fps = clock.get_fps()
@@ -658,7 +670,7 @@ class MainGame:
                         m2 = False
                 if event.type == pygame.MOUSEMOTION:
                     mousepos = event.pos
-                if event.type == pygame.MOUSEBUTTONDOWN and tmf <= timer:
+                if event.type == pygame.MOUSEBUTTONDOWN and tmf <= timer and player.xp > 0:
                     gun1.fire()
                     tmf = timer + 3
                 player.givekf(m1, m2, k, k2, k3)
