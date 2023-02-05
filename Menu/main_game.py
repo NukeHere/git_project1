@@ -80,7 +80,7 @@ class AI:
                 i += 1
             return l[::-1]
 
-        if timer >= self.tm or self.i == len(self.path) - 1 and self.bd.xp > 0:
+        if (timer >= self.tm or self.i == len(self.path) - 1) and self.bd.xp > 0:
             self.path = bfs()
             self.tm = timer + min(3, len(self.path) // 4)
             self.i = 0
@@ -448,7 +448,8 @@ class BaseTank(pygame.sprite.Sprite):
                             if pygame.sprite.collide_mask(self, sprite):
                                 self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                            -self.maxspeed * math.sin(self.ang))
-                        self.crspeed = -2
+                        self.crspeed = -self.maxspeed
+                        self.aim.ai.i = len(self.aim.ai.path) - 1
             if self.aim:
                 kk = math.atan(
                     (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
@@ -504,7 +505,6 @@ class BaseTank(pygame.sprite.Sprite):
                     if self.aim.ai.i < len(self.aim.ai.path) - 1:
                         self.aim.ai.i += 1
             else:
-                self.maxspeed = 3
                 if self.m1 and abs(self.crspeed) < self.maxspeed:
                     self.crspeed += 0.006 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
                     if self.k2 == -0.5 and self.crspeed > 0:
@@ -557,7 +557,8 @@ class MainGame:
         size = width, height = w, h
         VOLUEME_M, VOLUEME_Z = so
         sound_battle = pygame.mixer.Sound(os.path.join('data',
-                                                       'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva - Mountain Pass (Battle).mp3'))
+                                                       'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva -'
+                                                       ' Mountain Pass (Battle).mp3'))
         sound_f = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
         sound_fb = pygame.mixer.Sound(os.path.join('data', 'wot_big.mp3'))
         sound_fbs = pygame.mixer.Sound(os.path.join('data', 'wot_bigsnipe.mp3'))
@@ -630,7 +631,7 @@ class MainGame:
             if ls[0] == 'random':
                 ls = random.choice(ls[1:])
             if i[4] == '1':
-                maap2.append(GameObj(ls, int(i[1]), int(i[2]),
+                maap2.append(GameObj(ls[0], int(i[1]), int(i[2]),
                                      int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50,
                                      col=True, col_map=[i[3].split('x')[0], i[3].split('x')[1]]))
                 coords = int(i[1]) // 50 + int(i[2]) // 50 * 40
@@ -638,7 +639,7 @@ class MainGame:
                     for x in range(int(i[3].split('x')[0])):
                         maapai[coords + y * 40 + x] = [2500, 0]
             else:
-                maap2.append(GameObj(ls, int(i[1]), int(i[2]),
+                maap2.append(GameObj(ls[0], int(i[1]), int(i[2]),
                                      int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50, col=False))
         camera = Camera()
         ai11 = AI(maapai, ai3, gun2, tank2)
@@ -710,4 +711,4 @@ class MainGame:
 
 
 if __name__ == '__main__':
-    MainGame(1040, 780, [1], 0)
+    MainGame(1040, 780, [1], 0, so=[0, 1])
