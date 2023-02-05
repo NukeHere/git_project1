@@ -26,6 +26,7 @@ class AI:
         self.path = []
         self.i = 0
         self.tm2 = 10
+        self.am = None
 
     def update(self):
         def bfs():
@@ -85,6 +86,16 @@ class AI:
             self.i = 0
 
         if timer >= self.tm2 and self.bd.xp > 0:
+            if (((player.rect.x - self.bd.rect.x) ** 2 +
+                 (player.rect.y - self.bd.rect.y) ** 2) ** 0.5) >= 1000:
+                sou = random.choice((sound_fb_f, sound_fbs_f, sound_fm_f))
+                sou.set_volume(VOLUEME_Z / (((player.rect.x - self.bd.rect.x) ** 2 +
+                                             (player.rect.y - self.bd.rect.y) ** 2) ** 0.5) * 800)
+            else:
+                sou = random.choice((sound_fb, sound_fbs, sound_fm))
+                sou.set_volume(VOLUEME_Z / (((player.rect.x - self.bd.rect.x) ** 2 +
+                                             (player.rect.y - self.bd.rect.y) ** 2) ** 0.5) * 400)
+            sou.play(0)
             self.gun.fire()
             self.tm2 = timer + max(5, (((player.rect.x - self.bd.rect.x) ** 2 +
                                         (player.rect.y - self.bd.rect.y) ** 2) ** 0.5) / 600 * 5)
@@ -124,7 +135,7 @@ class Textrender:
         txt = q.render('Твои XP: ' + str(player.xp), True, (255, 255, 255))
         self.screen.blit(txt, (15 * self.screen_resolution,
                                565 * self.screen_resolution))
-        txt = q.render('XP врага: ' + str(cr_xp[0]), True, (255, 255, 255))
+        txt = q.render('XP врага: ' + str(max(cr_xp[0], 0)), True, (255, 255, 255))
         self.screen.blit(txt, (650 * self.screen_resolution,
                                565 * self.screen_resolution))
 
@@ -186,7 +197,7 @@ class Track(pygame.sprite.Sprite):
     def xpd(self, dmg):
         if self.repd:
             self.repd = False
-            self.body.xp -= dmg
+            self.body.xpd(dmg)
         self.tm = timer + 5
 
 
@@ -219,6 +230,15 @@ class Ammo(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
         self.rect = self.image.get_rect(center=self.rect.center)
+        for sprite in statick:
+            if pygame.sprite.collide_mask(self, sprite):
+                sound_f_exp.set_volume(VOLUEME_Z / (((player.rect.x - self.rect.x) ** 2 +
+                                                     (player.rect.y - self.rect.y) ** 2) ** 0.5) * 100)
+                sound_f_exp.play(0)
+                self.image = load_image('null.png')
+                self.crspeed = 0
+                self.remove(b_team)
+                self.remove(all_sprites)
         if self.team == "A":
             for sprite in b_team:
                 if pygame.sprite.spritecollideany(self, b_team) and pygame.sprite.collide_mask(self, sprite):
@@ -246,15 +266,10 @@ class Ammo(pygame.sprite.Sprite):
                         self.crspeed = 0
                         self.remove(b_team)
                         self.remove(all_sprites)
-        for sprite in statick:
-            if pygame.sprite.collide_mask(self, sprite):
-                sound_fire_exp.set_volume(VOLUEME_Z / (((player.rect.x - self.rect.x) ** 2 +
-                                                    (player.rect.y - self.rect.y) ** 2) ** 0.5) * 400)
-                sound_fire_exp.play(0)
-                self.image = load_image('null.png')
-                self.crspeed = 0
-                self.remove(b_team)
-                self.remove(all_sprites)
+
+    def rm(self):
+        self.remove(b_team)
+        self.remove(all_sprites)
 
 
 class Aim(pygame.sprite.Sprite):
@@ -346,23 +361,15 @@ class TankGun(pygame.sprite.Sprite):
                 if abs(self.ang - kk) <= 0.017:
                     self.ang = kk
                 elif e1 <= e2:
-                    # self.ang < kk or
                     self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
                 else:
                     self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
-                # print(self.ang / 0.017, kk / 0.017, e1, e2) debug out
 
     def fire(self):
-        if self.team == "A":
-            sound_fire.set_volume(VOLUEME_Z)
-        else:
-            sound_fire.set_volume(VOLUEME_Z / (((player.rect.x - self.body.rect.x) ** 2 +
-                                                (player.rect.y - self.body.rect.y) ** 2) ** 0.5) * 400)
-        sound_fire.play(0)
         Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10, bs_dmg=30)
 
     def xpd(self, dmg):
-        self.body.xp -= dmg
+        self.body.xpd(dmg)
 
 
 class BaseTank(pygame.sprite.Sprite):
@@ -442,7 +449,6 @@ class BaseTank(pygame.sprite.Sprite):
                                 self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                            -self.maxspeed * math.sin(self.ang))
                         self.crspeed = -2
-
             if self.aim:
                 kk = math.atan(
                     (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
@@ -500,7 +506,9 @@ class BaseTank(pygame.sprite.Sprite):
             else:
                 self.maxspeed = 3
                 if self.m1 and abs(self.crspeed) < self.maxspeed:
-                    self.crspeed += 0.003 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
+                    self.crspeed += 0.006 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
+                    if self.k2 == -0.5 and self.crspeed > 0:
+                        self.crspeed += 0.008 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
                 else:
                     if abs(self.crspeed) < 1:
                         self.crspeed = 0
@@ -542,24 +550,36 @@ class BaseTank(pygame.sprite.Sprite):
 class MainGame:
     def __init__(self, w, h, maap, spr, so):
         global width, height, all_sprites, player, barriers, a_team, b_team, aims, timer, cur_fps, delta, statick, \
-            sound_fire, sound_fire_exp, sound_probitie, sound_pr1, sound_pr2, sound_pr3, sound_probitie2, VOLUEME_M, \
-            VOLUEME_Z, cr_xp
+            sound_f, sound_f_exp, sound_probitie, sound_pr1, sound_pr2, sound_pr3, sound_probitie2, VOLUEME_M, \
+            VOLUEME_Z, cr_xp, sound_fb, sound_fbs, sound_fm, sound_fb_f, sound_fbs_f, sound_fm_f
         timer = 0
         pygame.init()
         size = width, height = w, h
         VOLUEME_M, VOLUEME_Z = so
         sound_battle = pygame.mixer.Sound(os.path.join('data',
                                                        'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva - Mountain Pass (Battle).mp3'))
-        sound_fire = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
+        sound_f = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
+        sound_fb = pygame.mixer.Sound(os.path.join('data', 'wot_big.mp3'))
+        sound_fbs = pygame.mixer.Sound(os.path.join('data', 'wot_bigsnipe.mp3'))
+        sound_fm = pygame.mixer.Sound(os.path.join('data', 'wot_mid.mp3'))
+        sound_fb_f = pygame.mixer.Sound(os.path.join('data', 'wot_big_far.mp3'))
+        sound_fbs_f = pygame.mixer.Sound(os.path.join('data', 'wot_bigsnipe_far.mp3'))
+        sound_fm_f = pygame.mixer.Sound(os.path.join('data', 'wot_mid_far.mp3'))
         sound_pr1 = pygame.mixer.Sound(os.path.join('data', '1.mp3'))
         sound_pr2 = pygame.mixer.Sound(os.path.join('data', '2.mp3'))
         sound_pr3 = pygame.mixer.Sound(os.path.join('data', '4.mp3'))
         sound_probitie = pygame.mixer.Sound(os.path.join('data', 'probitie1.mp3'))
         sound_probitie2 = pygame.mixer.Sound(os.path.join('data', 'probitie-2.mp3'))
-        sound_fire_exp = pygame.mixer.Sound(os.path.join('data', 'взрыв.mp3'))
+        sound_f_exp = pygame.mixer.Sound(os.path.join('data', 'взрыв.mp3'))
         sound_probitie.set_volume(VOLUEME_Z)
-        sound_fire.set_volume(VOLUEME_Z)
-        sound_fire_exp.set_volume(VOLUEME_Z)
+        sound_f.set_volume(VOLUEME_Z)
+        sound_fb.set_volume(VOLUEME_Z)
+        sound_fbs.set_volume(VOLUEME_Z)
+        sound_fm.set_volume(VOLUEME_Z)
+        sound_fb_f.set_volume(VOLUEME_Z)
+        sound_fbs_f.set_volume(VOLUEME_Z)
+        sound_fm_f.set_volume(VOLUEME_Z)
+        sound_f_exp.set_volume(VOLUEME_Z)
         sound_battle.set_volume(VOLUEME_M)
         screen = pygame.display.set_mode(size)
         aims = pygame.sprite.Group()
@@ -585,9 +605,9 @@ class MainGame:
         GameObj('пустыня.png', -100, 0, 100, 2000, col=True)
         GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
         GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
-        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 18, 100, 3)
-        tank2 = BaseTank(1200, 1000, 0, 'tank_body.png', 'B', 18, 100, 3)
-        tank3 = BaseTank(1500, 1500, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 20, 100, 4)
+        tank2 = BaseTank(1200, 1200, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank3 = BaseTank(1800, 1800, 0, 'tank_body.png', 'B', 18, 100, 3)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 10, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 10, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 10, 0)
@@ -611,8 +631,8 @@ class MainGame:
                 ls = random.choice(ls[1:])
             if i[4] == '1':
                 maap2.append(GameObj(ls, int(i[1]), int(i[2]),
-                                 int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50,
-                                 col=True, col_map=[i[3].split('x')[0], i[3].split('x')[1]]))
+                                     int(i[3].split('x')[0]) * 50, int(i[3].split('x')[1]) * 50,
+                                     col=True, col_map=[i[3].split('x')[0], i[3].split('x')[1]]))
                 coords = int(i[1]) // 50 + int(i[2]) // 50 * 40
                 for y in range(int(i[3].split('x')[1])):
                     for x in range(int(i[3].split('x')[0])):
@@ -671,6 +691,8 @@ class MainGame:
                 if event.type == pygame.MOUSEMOTION:
                     mousepos = event.pos
                 if event.type == pygame.MOUSEBUTTONDOWN and tmf <= timer and player.xp > 0:
+                    sound_fbs.set_volume(VOLUEME_Z)
+                    sound_fbs.play(0)
                     gun1.fire()
                     tmf = timer + 3
                 player.givekf(m1, m2, k, k2, k3)
