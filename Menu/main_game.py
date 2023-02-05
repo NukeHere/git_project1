@@ -38,29 +38,29 @@ class AI:
             cur = cur2 + 1 - 1
             self.mp1 = self.mp[:]
             self.mp1[cur][0] = 1
-            if 2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0:
+            if self.mp1[cur - 1][0] == 0:
                 d.append(cur - 1)
                 self.mp1[cur - 1] = [self.mp1[cur][0] + 1, cur]
-            if 2000 > self.mp1[cur + 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 1][0] == 0:
+            if self.mp1[cur + 1][0] == 0:
                 d.append(cur + 1)
                 self.mp1[cur + 1] = [self.mp1[cur][0] + 1, cur]
-            if 2000 > self.mp1[cur - 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 40][0] == 0:
+            if self.mp1[cur - 40][0] == 0:
                 d.append(cur - 40)
                 self.mp1[cur - 40] = [self.mp1[cur][0] + 1, cur]
-            if 2000 > self.mp1[cur + 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 40][0] == 0:
+            if self.mp1[cur + 40][0] == 0:
                 d.append(cur + 40)
                 self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
             while len(d) > 0:
-                if cur % 40 != 0 and (2000 > self.mp1[cur - 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 1][0] == 0):
+                if cur % 40 != 0 and self.mp1[cur - 1][0] == 0:
                     d.append(cur - 1)
                     self.mp1[cur - 1] = [self.mp1[cur][0] + 1, cur]
-                if cur % 40 != 39 and (2000 > self.mp1[cur + 1][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 1][0] == 0):
+                if cur % 40 != 39 and self.mp1[cur + 1][0] == 0:
                     d.append(cur + 1)
                     self.mp1[cur + 1] = [self.mp1[cur][0] + 1, cur]
-                if cur > 39 and (2000 > self.mp1[cur - 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur - 40][0] == 0):
+                if cur > 39 and self.mp1[cur - 40][0] == 0:
                     d.append(cur - 40)
                     self.mp1[cur - 40] = [self.mp1[cur][0] + 1, cur]
-                if cur < 1560 and (2000 > self.mp1[cur + 40][0] > self.mp1[cur][0] + 1 or self.mp1[cur + 40][0] == 0):
+                if cur < 1560 and self.mp1[cur + 40][0] == 0:
                     d.append(cur + 40)
                     self.mp1[cur + 40] = [self.mp1[cur][0] + 1, cur]
                 cur = d.popleft()
@@ -73,16 +73,13 @@ class AI:
             i = 0
             while cur != cur2 and i < 2000:
                 cur = self.mp1[cur][1]
-                if cur not in [i for i in range(40)] + [i for i in range(1559, 1600)] + [i for i in
-                                                                                         range(0, 1600, 40)] + \
-                        [i + 39 for i in range(0, 1600, 40)]:
-                    l.append(cur)
+                l.append(cur)
                 i += 1
             return l[::-1]
 
         if (timer >= self.tm or self.i == len(self.path) - 1) and self.bd.xp > 0:
             self.path = bfs()
-            self.tm = timer + min(3, len(self.path) // 4)
+            self.tm = timer + max(2, len(self.path) // 10)
             self.i = 0
 
         if timer >= self.tm2 and self.bd.xp > 0:
@@ -448,7 +445,6 @@ class BaseTank(pygame.sprite.Sprite):
                             if pygame.sprite.collide_mask(self, sprite):
                                 self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                            -self.maxspeed * math.sin(self.ang))
-                        self.crspeed = -self.maxspeed
                         self.aim.ai.i = len(self.aim.ai.path) - 1
             if self.aim:
                 kk = math.atan(
@@ -592,7 +588,7 @@ class MainGame:
         clock = pygame.time.Clock()
         maap2 = []
         maap = list(maap)[1:]
-        maapai = [[i, 0] for i in range(1600)]
+        maapai = [[0, 0] for i in range(1600)]
         """[GameObj('болото.png', 0, 0, 500, 500), GameObj('болото.png', 0, 500, 500, 500),
                 GameObj('болото.png', 500, 0, 500, 500), GameObj('болото.png', 500, 500, 500, 500),
                 GameObj('болото.png', 1000, 0, 500, 500), GameObj('болото.png', 1000, 500, 500, 500),
@@ -607,8 +603,8 @@ class MainGame:
         GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
         GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
         tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 20, 100, 4)
-        tank2 = BaseTank(1200, 1200, 0, 'tank_body.png', 'B', 18, 100, 3)
-        tank3 = BaseTank(1800, 1800, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank2 = BaseTank(200, 1700, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank3 = BaseTank(1750, 1650, 0, 'tank_body.png', 'B', 18, 100, 3)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 10, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 10, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 10, 0)
@@ -657,6 +653,7 @@ class MainGame:
         t = Textrender(screen, screen_resolution=w / 800)
         tmf = 0
         while running:
+            #print(clock.get_fps())
             ai12.update()
             ai11.update()
             cur_fps = clock.get_fps()
