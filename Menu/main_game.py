@@ -79,7 +79,7 @@ class AI:
 
         if (timer >= self.tm or self.i == len(self.path) - 1) and self.bd.xp > 0:
             self.path = bfs()
-            self.tm = timer + max(2, len(self.path) // 10)
+            self.tm = timer + min(max(3, len(self.path) // 5), 10)
             self.i = 0
 
         if timer >= self.tm2 and self.bd.xp > 0:
@@ -398,7 +398,7 @@ class BaseTank(pygame.sprite.Sprite):
         self.m1 = 0
         self.m2 = 0
         self.k = 0
-        self.k2 = 0
+        self.k2 = 1
         self.k3 = 0
         self.maxspeed = maxspeed
 
@@ -445,7 +445,7 @@ class BaseTank(pygame.sprite.Sprite):
                             if pygame.sprite.collide_mask(self, sprite):
                                 self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                            -self.maxspeed * math.sin(self.ang))
-                        self.aim.ai.i = len(self.aim.ai.path) - 1
+                        self.crspeed = -self.maxspeed
             if self.aim:
                 kk = math.atan(
                     (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
@@ -602,9 +602,9 @@ class MainGame:
         GameObj('пустыня.png', -100, 0, 100, 2000, col=True)
         GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
         GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
-        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 20, 100, 4)
-        tank2 = BaseTank(200, 1700, 0, 'tank_body.png', 'B', 18, 100, 3)
-        tank3 = BaseTank(1750, 1650, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 20, 100, 3)
+        tank2 = BaseTank(200, 1700, 0, 'tank_body.png', 'B', 18, 100, 2)
+        tank3 = BaseTank(1750, 1650, 0, 'tank_body.png', 'B', 18, 100, 2)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 10, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 10, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 10, 0)
