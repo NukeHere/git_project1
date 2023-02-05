@@ -183,7 +183,7 @@ class Track(pygame.sprite.Sprite):
         else:
             self.image = pygame.transform.rotate(self.image2, -(self.ang / 0.017))
             self.body.repd = False
-            if timer >= self.tm:
+            if timer >= self.tm and self.body.xp > 0:
                 self.tm = 0
                 self.repd = True
                 self.body.repd = True
@@ -192,7 +192,7 @@ class Track(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def xpd(self, dmg):
-        if self.repd:
+        if self.repd and self.body.xp > 0:
             self.repd = False
             self.body.xpd(dmg)
         self.tm = timer + 5
@@ -435,6 +435,7 @@ class BaseTank(pygame.sprite.Sprite):
                     self.rect = self.rect.move(-self.crspeed * math.cos(self.ang), -self.crspeed * math.sin(self.ang))
                     self.crspeed = 0
                     if self.aim:
+                        self.maxspeed = self.maxspeed * 5
                         self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                    -self.maxspeed * math.sin(self.ang))
                         if pygame.sprite.collide_mask(self, sprite):
@@ -445,6 +446,19 @@ class BaseTank(pygame.sprite.Sprite):
                             if pygame.sprite.collide_mask(self, sprite):
                                 self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
                                                            -self.maxspeed * math.sin(self.ang))
+                                self.ang += 90 * 0.017
+                                self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
+                                                           -self.maxspeed * math.sin(self.ang))
+                                if pygame.sprite.collide_mask(self, sprite):
+                                    self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
+                                                               self.maxspeed * math.sin(self.ang))
+                                    self.rect = self.rect.move(self.maxspeed * math.cos(self.ang),
+                                                               self.maxspeed * math.sin(self.ang))
+                                    if pygame.sprite.collide_mask(self, sprite):
+                                        self.rect = self.rect.move(-self.maxspeed * math.cos(self.ang),
+                                                                   -self.maxspeed * math.sin(self.ang))
+                                        self.ang -= 90 * 0.017
+                        self.maxspeed = self.maxspeed / 5
                         self.crspeed = -self.maxspeed
             if self.aim:
                 kk = math.atan(
@@ -552,9 +566,7 @@ class MainGame:
         pygame.init()
         size = width, height = w, h
         VOLUEME_M, VOLUEME_Z = so
-        sound_battle = pygame.mixer.Sound(os.path.join('data',
-                                                       'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva -'
-                                                       ' Mountain Pass (Battle).mp3'))
+        sound_battle = pygame.mixer.Sound(os.path.join('data', 'berlin.mp3'))
         sound_f = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
         sound_fb = pygame.mixer.Sound(os.path.join('data', 'wot_big.mp3'))
         sound_fbs = pygame.mixer.Sound(os.path.join('data', 'wot_bigsnipe.mp3'))
