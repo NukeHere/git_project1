@@ -102,12 +102,13 @@ class AI:
 
 
 class GameObj(pygame.sprite.Sprite):
-    def __init__(self, nm, x, y, w, h, col=False, col_map=None):
+    def __init__(self, nm, x, y, w, h, col=False, col_map=None, ang=0.0):
         super().__init__(all_sprites)
         self.name = 'obj'
         self.image = load_image(nm)
         self.image_orig = pygame.transform.scale(self.image, (w, h))
         self.image = pygame.transform.scale(self.image, (w, h))
+        self.image = pygame.transform.rotate(self.image, ang)
         if col:
             self.rect = self.image.get_rect()
             self.mask = pygame.mask.from_surface(self.image)
@@ -166,25 +167,40 @@ class Track(pygame.sprite.Sprite):
             self.add(b_team)
         self.team = team
         self.name = 'track'
-        self.image = load_image(nm)
+        self.frames = []
+        self.cut_sheet(load_image(nm), 2, 1)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
         self.image_orig = pygame.transform.scale(self.image, (67, 65))
-        self.image = pygame.transform.scale(self.image, (67, 65))
         self.image2 = pygame.transform.scale(load_image(nm2), (67, 65))
         self.rect = self.image.get_rect()
         self.rect.move(body.rect.x, body.rect.y)
         self.ang = body.ang + 1
         self.body = body
-        self.stang = start_ang * 0.017
+        self.stang = start_ang * 0.0175
         self.armour = armour
         self.repd = True
         self.tm = 0
 
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
     def update(self):
         self.ang = self.body.ang + self.stang
         if self.repd:
-            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+            if abs(self.body.crspeed) >= 1:
+                self.cur_frame = (self.cur_frame + abs(self.body.crspeed) / 16) % len(self.frames)
+                self.image_orig = self.frames[int(self.cur_frame)]
+                self.image_orig = pygame.transform.scale(self.image_orig, (67, 65))
+            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.0175))
         else:
-            self.image = pygame.transform.rotate(self.image2, -(self.ang / 0.017))
+            self.image = pygame.transform.rotate(self.image2, -(self.ang / 0.0175))
             self.body.repd = False
             if timer >= self.tm:
                 self.tm = 0
@@ -228,7 +244,7 @@ class Ammo(pygame.sprite.Sprite):
         self.rect = self.rect.move(self.crspeed * math.cos(self.ang),
                                    self.crspeed * math.sin(self.ang))
         self.mask = pygame.mask.from_surface(self.image)
-        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+        self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.0175))
         self.rect = self.image.get_rect(center=self.rect.center)
         for sprite in statick:
             if pygame.sprite.collide_mask(self, sprite):
@@ -324,7 +340,7 @@ class TankGun(pygame.sprite.Sprite):
 
     def update(self):
         if self.body.xp > 0:
-            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.0175))
             self.rect = self.image.get_rect(center=self.rect.center)
             self.rect.center = self.body.rect.center
             self.mask = pygame.mask.from_surface(self.image)
@@ -332,15 +348,15 @@ class TankGun(pygame.sprite.Sprite):
                 (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
             if self.aim.rect.y < self.rect.center[1]:
                 if self.aim.rect.x > self.rect.center[0]:
-                    kk = -(90 * 0.017 + kk)
+                    kk = -(90 * 0.0175 + kk)
                 else:
-                    kk = -90 * 0.017 - kk
+                    kk = -90 * 0.0175 - kk
             else:
-                kk = 90 * 0.017 - kk
-            if self.ang > 180 * 0.017:
-                self.ang = -180 * 0.017
-            elif self.ang < -180 * 0.017:
-                self.ang = 180 * 0.017
+                kk = 90 * 0.0175 - kk
+            if self.ang > 180 * 0.0175:
+                self.ang = -180 * 0.0175
+            elif self.ang < -180 * 0.0175:
+                self.ang = 180 * 0.0175
             if self.ang != kk:
                 e1 = 0
                 e2 = 0
@@ -358,12 +374,12 @@ class TankGun(pygame.sprite.Sprite):
                     else:
                         e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
                         e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
-                if abs(self.ang - kk) <= 0.017:
+                if abs(self.ang - kk) <= 0.0175:
                     self.ang = kk
                 elif e1 <= e2:
-                    self.ang += 0.017 * 1 * (100 / max(1, int(cur_fps)))
+                    self.ang += 0.0175 * 1 * (100 / max(1, int(cur_fps)))
                 else:
-                    self.ang -= 0.017 * 1 * (100 / max(1, int(cur_fps)))
+                    self.ang -= 0.0175 * 1 * (100 / max(1, int(cur_fps)))
 
     def fire(self):
         Ammo('bul.png', self.team, self.ang, self.rect.center, sp=10, bs_dmg=30)
@@ -392,7 +408,7 @@ class BaseTank(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.move(x, y)
         self.rect.x, self.rect.y = x, y
-        self.ang = angle * 0.017
+        self.ang = angle * 0.0175
         self.crspeed = 0
         self.armour = armour
         self.xp = xp
@@ -415,7 +431,7 @@ class BaseTank(pygame.sprite.Sprite):
                 self.crspeed = 0
                 k = 0.4
             self.mask = pygame.mask.from_surface(self.image)
-            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.017))
+            self.image = pygame.transform.rotate(self.image_orig, -(self.ang / 0.0175))
             self.rect = self.image.get_rect(center=self.rect.center)
             if self.team == "A":
                 for sprite in b_team:
@@ -454,15 +470,15 @@ class BaseTank(pygame.sprite.Sprite):
                     (self.aim.rect.x - self.rect.center[0] + 0.0001) / (self.aim.rect.y - self.rect.center[1] + 0.0001))
                 if self.aim.rect.y < self.rect.center[1]:
                     if self.aim.rect.x > self.rect.center[0]:
-                        kk = -(90 * 0.017 + kk)
+                        kk = -(90 * 0.0175 + kk)
                     else:
-                        kk = -90 * 0.017 - kk
+                        kk = -90 * 0.0175 - kk
                 else:
-                    kk = 90 * 0.017 - kk
-                if self.ang > 180 * 0.017:
-                    self.ang = -180 * 0.017
-                elif self.ang < -180 * 0.017:
-                    self.ang = 180 * 0.017
+                    kk = 90 * 0.0175 - kk
+                if self.ang > 180 * 0.0175:
+                    self.ang = -180 * 0.0175
+                elif self.ang < -180 * 0.0175:
+                    self.ang = 180 * 0.0175
                 if self.ang != kk:
                     e1 = 0
                     e2 = 0
@@ -480,17 +496,17 @@ class BaseTank(pygame.sprite.Sprite):
                         else:
                             e1 += -self.ang + kk if self.ang < kk else self.ang + 3.06 + 3.06 - kk
                             e2 += self.ang - kk if self.ang > kk else 3.06 + 3.06 - self.ang + kk
-                    if abs(self.ang - kk) <= 0.017:
+                    if abs(self.ang - kk) <= 0.0175:
                         self.ang = kk
                     elif e1 <= e2:
                         # self.ang < kk or
-                        self.ang += 0.017 * k * (100 / max(1, int(cur_fps)))
+                        self.ang += 0.0175 * k * (100 / max(1, int(cur_fps)))
                     else:
-                        self.ang -= 0.017 * k * (100 / max(1, int(cur_fps)))
+                        self.ang -= 0.0175 * k * (100 / max(1, int(cur_fps)))
                 if (self.rect.center[0] - delta.rect.x + 1) // 50 + (
                         self.rect.center[1] - delta.rect.y + 1) // 50 * 40 != \
                         (self.aim.rect.x - delta.rect.x + 1) // 50 + (self.aim.rect.y - delta.rect.y + 1) // 50 * 40:
-                    if abs(self.ang - kk) <= 0.017 * k and self.crspeed < self.maxspeed:
+                    if abs(self.ang - kk) <= 0.0175 * k and self.crspeed < self.maxspeed:
                         if self.crspeed < 1:
                             self.crspeed = 1
                         self.crspeed += 0.012 * (100 / max(1, int(cur_fps)))
@@ -504,7 +520,6 @@ class BaseTank(pygame.sprite.Sprite):
                     if self.aim.ai.i < len(self.aim.ai.path) - 1:
                         self.aim.ai.i += 1
             else:
-                self.maxspeed = 3
                 if self.m1 and abs(self.crspeed) < self.maxspeed:
                     self.crspeed += 0.006 * self.k * self.k2 * (100 / max(1, int(cur_fps)))
                     if self.k2 == -0.5 and self.crspeed > 0:
@@ -517,8 +532,8 @@ class BaseTank(pygame.sprite.Sprite):
                     elif self.crspeed < 0:
                         self.crspeed += 0.018 * (100 / max(1, int(cur_fps)))
                 if self.m2:
-                    self.ang += (0.6 * self.k3 * 0.017) * (100 / max(1, int(cur_fps))) * k
-                    self.ang = (self.ang / 0.017) % 360 * 0.017
+                    self.ang += (0.6 * self.k3 * 0.0175) * (100 / max(1, int(cur_fps))) * k
+                    self.ang = (self.ang / 0.0175) % 360 * 0.0175
         elif self.xp < 0:
             self.xp = 0
 
@@ -537,7 +552,7 @@ class BaseTank(pygame.sprite.Sprite):
                 self.add(statick)
                 self.image = load_image('tank_body2.png')
                 self.image = pygame.transform.scale(self.image, (67, 31))
-                self.image = pygame.transform.rotate(self.image, -(self.ang / 0.017))
+                self.image = pygame.transform.rotate(self.image, -(self.ang / 0.0175))
 
     def givekf(self, m1, m2, k, k2, k3):
         self.m1 = m1
@@ -601,13 +616,17 @@ class MainGame:
                 GameObj('болото.png', 1000, 2000, 500, 500), GameObj('болото.png', 1000, 2500, 500, 500),
                 GameObj('болото.png', 1500, 2000, 500, 500), GameObj('болото.png', 1500, 2500, 500, 500)]"""
         delta = GameObj('null.png', 0, 0, 1, 1)
-        GameObj('пустыня.png', 0, -100, 2000, 100, col=True)
-        GameObj('пустыня.png', -100, 0, 100, 2000, col=True)
-        GameObj('пустыня.png', 0, 2000, 2000, 100, col=True)
-        GameObj('пустыня.png', 2000, 0, 100, 2000, col=True)
+        for i in range(28):
+            GameObj('rock.png', -400 + i * 100, -100, 100, 100, col=True,)
+        for i in range(28):
+            GameObj('rock.png', -100, -400 + i * 100, 100, 100, col=True, ang=90)
+        for i in range(28):
+            GameObj('rock.png', -400 + i * 100, 2000, 100, 100, col=True, ang=180)
+        for i in range(28):
+            GameObj('rock.png', 2000, -400 + i * 100, 100, 100, col=True, ang=-90)
         tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 20, 100, 4)
-        tank2 = BaseTank(1200, 1200, 0, 'tank_body.png', 'B', 18, 100, 3)
-        tank3 = BaseTank(1800, 1800, 0, 'tank_body.png', 'B', 18, 100, 3)
+        tank2 = BaseTank(1200, 1200, 0, 'tank_body.png', 'B', 18, 100, 4)
+        tank3 = BaseTank(1800, 1800, 0, 'tank_body.png', 'B', 18, 100, 4)
         track11 = Track('track1.png', 'track2.png', "A", tank1, 10, 0)
         track12 = Track('track1.png', 'track2.png', "A", tank1, 10, 180)
         track21 = Track('track1.png', 'track2.png', "B", tank2, 10, 0)
@@ -710,4 +729,4 @@ class MainGame:
 
 
 if __name__ == '__main__':
-    MainGame(1040, 780, [1], 0)
+    MainGame(1040, 780, [1], 0, [0, 100])
