@@ -571,8 +571,7 @@ class MainGame:
         pygame.init()
         size = width, height = w, h
         VOLUEME_M, VOLUEME_Z = so
-        sound_battle = pygame.mixer.Sound(os.path.join('data',
-                                                       'Andrey Kulik feat. Andrius Klimka and Vyacheslav Skadorva - Mountain Pass (Battle).mp3'))
+        sound_battle = pygame.mixer.Sound(os.path.join('data', 'berlin'))
         sound_f = pygame.mixer.Sound(os.path.join('data', 'выстрел.mp3'))
         sound_fb = pygame.mixer.Sound(os.path.join('data', 'wot_big.mp3'))
         sound_fbs = pygame.mixer.Sound(os.path.join('data', 'wot_bigsnipe.mp3'))
