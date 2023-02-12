@@ -615,14 +615,14 @@ class MainGame:
                 GameObj('болото.png', 1000, 2000, 500, 500), GameObj('болото.png', 1000, 2500, 500, 500),
                 GameObj('болото.png', 1500, 2000, 500, 500), GameObj('болото.png', 1500, 2500, 500, 500)]"""
         delta = GameObj('null.png', 0, 0, 1, 1)
-        for i in range(28):
-            GameObj('rock.png', -400 + i * 100, -100, 100, 100, col=True,)
-        for i in range(28):
-            GameObj('rock.png', -100, -400 + i * 100, 100, 100, col=True, ang=90)
-        for i in range(28):
-            GameObj('rock.png', -400 + i * 100, 2000, 100, 100, col=True, ang=180)
-        for i in range(28):
-            GameObj('rock.png', 2000, -400 + i * 100, 100, 100, col=True, ang=-90)
+        for i in range(22):
+            GameObj('rock.png', -100 + i * 100, -100, 100, 100, col=True,)
+        for i in range(22):
+            GameObj('rock.png', -100, -100 + i * 100, 100, 100, col=True, ang=90)
+        for i in range(22):
+            GameObj('rock.png', -100 + i * 100, 2000, 100, 100, col=True, ang=180)
+        for i in range(22):
+            GameObj('rock.png', 2000, -100 + i * 100, 100, 100, col=True, ang=-90)
         tank1 = BaseTank(101, 101, 0, 'tank_body.png', 'A', 20, 100, 4)
         tank2 = BaseTank(1200, 1200, 0, 'tank_body.png', 'B', 18, 100, 4)
         tank3 = BaseTank(1800, 1800, 0, 'tank_body.png', 'B', 18, 100, 4)
