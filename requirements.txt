@@ -1,0 +1,7 @@
+pygame - 2.1.2
+os
+sys
+csv
+math
+random
+collections
